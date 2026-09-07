@@ -17,6 +17,7 @@ import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Section;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.Route;
@@ -135,39 +136,40 @@ public class BlackjackView extends Div {
     private Header header() {
         var mark = text("brand-mark", "♠");
         mark.getElement().setAttribute("aria-hidden", "true");
-        // Navigate within the Vaadin UI; plain anchors can create a new browser UI.
-        var english = new Button("EN", event -> switchLanguage(BlackjackView.class));
-        var russian = new Button("RU", event -> switchLanguage(RussianBlackjackView.class));
-        var spanish = new Button("ES", event -> switchLanguage(SpanishBlackjackView.class));
-        english.setId("language-en");
-        russian.setId("language-ru");
-        spanish.setId("language-es");
-        english.setAriaLabel("English");
-        russian.setAriaLabel("Русский");
-        spanish.setAriaLabel("Español");
-        var language = locale.getLanguage();
-        english.getElement().setAttribute("aria-pressed", Boolean.toString(language.equals("en")));
-        russian.getElement().setAttribute("aria-pressed", Boolean.toString(language.equals("ru")));
-        spanish.getElement().setAttribute("aria-pressed", Boolean.toString(language.equals("es")));
-        english.addClassName("language-option");
-        russian.addClassName("language-option");
-        spanish.addClassName("language-option");
-        var activeLanguage = switch (language) {
-            case "ru" -> russian;
-            case "es" -> spanish;
-            default -> english;
-        };
-        activeLanguage.addClassName("active");
-        var languageSwitch = box("language-switch", english, russian, spanish);
-        languageSwitch.getElement().setAttribute("role", "group");
-        languageSwitch.getElement().setAttribute("aria-label", copy.text("language.label"));
+        var languageSelect = new Select<String>();
+        languageSelect.setId("language-select");
+        languageSelect.setAriaLabel(copy.text("language.label"));
+        languageSelect.setItems("en", "ru", "es");
+        languageSelect.setItemLabelGenerator(this::languageLabel);
+        languageSelect.setValue(locale.getLanguage());
+        languageSelect.setWidth("170px");
+        languageSelect.addClassName("language-select");
+        languageSelect.addValueChangeListener(event -> {
+            var language = event.getValue();
+            if (language != null && !language.equals(locale.getLanguage())) {
+                switchLanguage(language);
+            }
+        });
         var header = new Header(box("brand", mark, new Span(copy.text("brand.name"))),
-                box("header-tools", rulesButton(), languageSwitch));
+                box("header-tools", rulesButton(), languageSelect));
         header.addClassName("site-header");
         return header;
     }
 
-    private void switchLanguage(Class<? extends BlackjackView> target) {
+    private String languageLabel(String language) {
+        return switch (language) {
+            case "ru" -> "🇷🇺 Русский";
+            case "es" -> "🇪🇸 Español";
+            default -> "🇬🇧 English";
+        };
+    }
+
+    private void switchLanguage(String language) {
+        var target = switch (language) {
+            case "ru" -> RussianBlackjackView.class;
+            case "es" -> SpanishBlackjackView.class;
+            default -> BlackjackView.class;
+        };
         getUI().ifPresent(ui -> {
             // A preserved view may have been reattached to a new UI after a refresh.
             ComponentUtil.setData(ui, BlackjackGame.class, game);
