@@ -24,23 +24,29 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Real Vaadin components and listeners wired to a deterministic rules engine. */
 class BlackjackViewTest {
     private BlackjackView view;
+    // Vaadin keeps the current UI weakly; retain the fixture for the whole test.
+    private UI ui;
 
     @BeforeEach
     void createUi() {
-        UI.setCurrent(new UI());
+        ui = new UI();
+        UI.setCurrent(ui);
         view = new BlackjackView(game(TEN, SIX, SEVEN, TEN, KING));
         UI.getCurrent().add(view);
     }
 
     @AfterEach
-    void clearUi() { UI.setCurrent(null); }
+    void clearUi() { UI.setCurrent(null); ui = null; }
 
     @Test
     void initialControlsAndStatusInviteADeal() {
         assertFalse(button("hit").isEnabled());
         assertFalse(button("stand").isEnabled());
+        assertFalse(button("hit").isVisible());
+        assertFalse(button("stand").isVisible());
+        assertTrue(button("new-round").isVisible());
         assertTrue(button("new-round").isEnabled());
-        assertEquals("New game ready.", component("status-title", H2.class).getText());
+        assertEquals("Place your bet", component("status-title", H2.class).getText());
         assertEquals("0", component("wins", Span.class).getText());
         assertEquals("polite", component("round-status", Div.class).getElement().getAttribute("aria-live"));
     }
@@ -50,9 +56,12 @@ class BlackjackViewTest {
         button("new-round").click();
         assertTrue(button("hit").isEnabled());
         assertTrue(button("stand").isEnabled());
+        assertTrue(button("hit").isVisible());
+        assertTrue(button("stand").isVisible());
+        assertFalse(button("new-round").isVisible());
         assertFalse(button("new-round").isEnabled());
         assertEquals("17", component("player-score", Span.class).getText());
-        assertEquals("6 showing", component("dealer-score", Span.class).getText());
+        assertEquals("6 + ?", component("dealer-score", Span.class).getText());
         var dealerCards = component("dealer-cards", Div.class);
         assertEquals(2, dealerCards.getChildren().count());
         assertEquals(1, dealerCards.getChildren().filter(card -> card.hasClassName("card-back")).count());
@@ -64,11 +73,14 @@ class BlackjackViewTest {
     void standRevealsDealerRunsRulesAndUpdatesStatisticsAndControls() {
         button("new-round").click();
         button("stand").click();
-        assertEquals("Dealer busts. You win!", component("status-title", H2.class).getText());
+        assertEquals("You win", component("status-title", H2.class).getText());
         assertEquals("26 · Bust", component("dealer-score", Span.class).getText());
         assertEquals("1", component("wins", Span.class).getText());
         assertFalse(button("hit").isEnabled());
         assertFalse(button("stand").isEnabled());
+        assertFalse(button("hit").isVisible());
+        assertFalse(button("stand").isVisible());
+        assertTrue(button("new-round").isVisible());
         assertTrue(button("new-round").isEnabled());
         assertEquals(0, component("dealer-cards", Div.class).getChildren()
                 .filter(card -> card.hasClassName("card-back")).count());
@@ -78,12 +90,12 @@ class BlackjackViewTest {
     void hitBustsAndNewRoundResetsCardsWhileKeepingResults() {
         button("new-round").click();
         button("hit").click();
-        assertEquals("Busted. The next hand awaits.", component("status-title", H2.class).getText());
+        assertEquals("Bust", component("status-title", H2.class).getText());
         assertEquals("27 · Bust", component("player-score", Span.class).getText());
         assertEquals("1", component("losses", Span.class).getText());
         button("new-round").click();
-        assertEquals("HAND 02", component("round-number", Span.class).getText());
-        assertEquals("14 · Soft", component("player-score", Span.class).getText());
+        assertEquals("Hand 02", component("round-number", Span.class).getText());
+        assertEquals("14 · Ace 11", component("player-score", Span.class).getText());
         assertEquals("1", component("losses", Span.class).getText());
         assertEquals(2, component("player-cards", Div.class).getChildren().count());
     }
@@ -94,7 +106,7 @@ class BlackjackViewTest {
         UI.getCurrent().add(view);
         button("new-round").click();
         assertEquals("21 · Blackjack", component("player-score", Span.class).getText());
-        assertEquals("Blackjack. Beautifully played.", component("status-title", H2.class).getText());
+        assertEquals("Blackjack!", component("status-title", H2.class).getText());
         assertFalse(button("hit").isEnabled());
         assertTrue(button("new-round").isEnabled());
     }
@@ -108,7 +120,7 @@ class BlackjackViewTest {
         assertEquals("1", component("wins", Span.class).getText());
         view = otherView;
         assertEquals("0", component("wins", Span.class).getText());
-        assertEquals("New game ready.", component("status-title", H2.class).getText());
+        assertEquals("Place your bet", component("status-title", H2.class).getText());
     }
 
     @Test
@@ -133,7 +145,7 @@ class BlackjackViewTest {
         assertEquals("155", component("wager-chips", Span.class).getText());
         assertFalse(component("bet-amount", IntegerField.class).isEnabled());
         assertFalse(button("chip-5").isEnabled());
-        assertEquals("DECK 1 · 48 / 52 LEFT", component("shoe-status", Span.class).getText());
+        assertEquals("Deck 1 · 48/52", component("shoe-status", Span.class).getText());
     }
 
     @Test
@@ -159,7 +171,8 @@ class BlackjackViewTest {
         button("new-round").click();
         assertEquals("1,007.5", component("bankroll", Span.class).getText());
         assertEquals("+7.5 this game", component("session-profit", Span.class).getText());
-        assertTrue(component("payout-text", Span.class).getText().contains("12.5 returned"));
+        assertEquals("+7.5 chips", component("payout-text", Span.class).getText());
+        assertTrue(component("round-status", Div.class).getElement().getAttribute("aria-label").contains("12.5 returned"));
     }
 
     @Test
@@ -167,9 +180,9 @@ class BlackjackViewTest {
         button("new-round").click();
         button("stand").click();
         assertEquals("1,025", component("bankroll", Span.class).getText());
-        assertEquals("DECK 1 · 47 / 52 LEFT", component("shoe-status", Span.class).getText());
+        assertEquals("Deck 1 · 47/52", component("shoe-status", Span.class).getText());
         button("new-round").click();
-        assertEquals("DECK 1 · 43 / 52 LEFT", component("shoe-status", Span.class).getText());
+        assertEquals("Deck 1 · 43/52", component("shoe-status", Span.class).getText());
     }
 
     @Test
@@ -187,7 +200,7 @@ class BlackjackViewTest {
         assertFalse(component("bet-amount", IntegerField.class).isEnabled());
         button("new-game").click();
         assertEquals("1,000", component("bankroll", Span.class).getText());
-        assertEquals("DECK 1 · 52 / 52 LEFT", component("shoe-status", Span.class).getText());
+        assertEquals("Deck 1 · 52/52", component("shoe-status", Span.class).getText());
         assertEquals(25, component("bet-amount", IntegerField.class).getValue());
         assertTrue(button("new-round").isEnabled());
         assertFalse(button("new-game").isVisible());
@@ -199,7 +212,7 @@ class BlackjackViewTest {
         button("stand").click();
         assertTrue(button("new-game").isVisible());
         button("new-game").click();
-        assertEquals("NEW GAME", component("round-number", Span.class).getText());
+        assertEquals("New game", component("round-number", Span.class).getText());
         assertEquals("1,000", component("bankroll", Span.class).getText());
         assertEquals("0", component("wins", Span.class).getText());
     }
@@ -208,11 +221,11 @@ class BlackjackViewTest {
     void russianRouteLocalizesTheWholeGame() {
         view = new RussianBlackjackView(game(TEN, SIX, SEVEN, TEN, KING));
         UI.getCurrent().add(view);
-        assertEquals("Новая игра готова.", component("status-title", H2.class).getText());
-        assertEquals("Первая рука", button("new-round").getText());
+        assertEquals("Сделайте ставку", component("status-title", H2.class).getText());
+        assertEquals("Раздать", button("new-round").getText());
         button("new-round").click();
-        assertEquals("РУКА 01", component("round-number", Span.class).getText());
-        assertEquals("видно 6", component("dealer-score", Span.class).getText());
+        assertEquals("Раздача 01", component("round-number", Span.class).getText());
+        assertEquals("6 + ?", component("dealer-score", Span.class).getText());
         assertTrue(component("dealer-cards", Div.class).getElement().getOuterHTML().contains("шестёрка"));
     }
 
@@ -224,8 +237,8 @@ class BlackjackViewTest {
 
         view = new RussianBlackjackView();
         UI.getCurrent().add(view);
-        assertEquals("РУКА 01", component("round-number", Span.class).getText());
-        assertNotEquals("Новая игра готова.", component("status-title", H2.class).getText());
+        assertEquals("Раздача 01", component("round-number", Span.class).getText());
+        assertNotEquals("Сделайте ставку", component("status-title", H2.class).getText());
     }
 
     @Test

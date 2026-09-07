@@ -7,7 +7,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Footer;
 import com.vaadin.flow.component.html.H1;
@@ -42,7 +42,6 @@ public class BlackjackView extends Div {
     private final Span dealerScore = text("hand-score", "—");
     private final Span playerScore = text("hand-score", "—");
     private final Span roundNumber = text("round-number", "THE TABLE IS YOURS");
-    private final Span turn = text("turn-label", "READY TO PLAY");
     private final Span wins = new Span("0");
     private final Span losses = new Span("0");
     private final Span pushes = new Span("0");
@@ -65,6 +64,7 @@ public class BlackjackView extends Div {
     private final Button hit = new Button();
     private final Button stand = new Button();
     private final Button newRound = new Button();
+    private Div betting;
 
     public BlackjackView() {
         this(gameForCurrentUi(), Locale.ENGLISH);
@@ -100,7 +100,7 @@ public class BlackjackView extends Div {
         applyStaticCopy();
         betAmount.setValue(25);
         addClassName("blackjack-app");
-        var main = new Main(introduction(), table(), rules());
+        var main = new Main(introduction(), table());
         main.addClassName("content");
         add(header(), main, footer());
         render();
@@ -135,39 +135,46 @@ public class BlackjackView extends Div {
     private Header header() {
         var mark = text("brand-mark", "♠");
         mark.getElement().setAttribute("aria-hidden", "true");
-        // Same-origin anchors are intercepted by Vaadin Router and keep this UI's game state.
-        var english = new Anchor("/", "EN");
-        var russian = new Anchor("/ru", "RU");
+        // Navigate within the Vaadin UI; plain anchors can create a new browser UI.
+        var english = new Button("EN", event -> switchLanguage(BlackjackView.class));
+        var russian = new Button("RU", event -> switchLanguage(RussianBlackjackView.class));
+        english.setId("language-en");
+        russian.setId("language-ru");
+        english.setAriaLabel("English");
+        russian.setAriaLabel("Русский");
+        english.getElement().setAttribute("aria-pressed", Boolean.toString(!locale.getLanguage().equals("ru")));
+        russian.getElement().setAttribute("aria-pressed", Boolean.toString(locale.getLanguage().equals("ru")));
         english.addClassName("language-option");
         russian.addClassName("language-option");
         var activeLanguage = locale.getLanguage().equals("ru") ? russian : english;
         activeLanguage.addClassName("active");
-        activeLanguage.getElement().setAttribute("aria-current", "page");
         var languageSwitch = box("language-switch", english, russian);
-        languageSwitch.getElement().setAttribute("role", "navigation");
+        languageSwitch.getElement().setAttribute("role", "group");
         languageSwitch.getElement().setAttribute("aria-label", copy.text("language.label"));
         var header = new Header(box("brand", mark, new Span(copy.text("brand.name"))),
-                box("header-tools", text("header-note", copy.text("header.note")), languageSwitch));
+                box("header-tools", rulesButton(), languageSwitch));
         header.addClassName("site-header");
         return header;
+    }
+
+    private void switchLanguage(Class<? extends BlackjackView> target) {
+        getUI().ifPresent(ui -> {
+            // A preserved view may have been reattached to a new UI after a refresh.
+            ComponentUtil.setData(ui, BlackjackGame.class, game);
+            ui.navigate(target);
+        });
     }
 
     private Section introduction() {
         var title = new H1(copy.text("game.title"));
         title.setId("game-title");
-        var introCopy = box("intro-copy", text("eyebrow", copy.text("intro.eyebrow")), title,
-                new Paragraph(copy.text("intro.subtitle")));
-        var stats = box("session-stats", statistic(copy.text("statistics.wins"), wins, "wins"),
-                statistic(copy.text("statistics.losses"), losses, "losses"),
-                statistic(copy.text("statistics.pushes"), pushes, "pushes"));
-        stats.getElement().setAttribute("role", "group");
-        stats.getElement().setAttribute("aria-label", copy.text("statistics.label"));
+        var introCopy = box("intro-copy", title);
         bankroll.setId("bankroll");
         sessionProfit.setId("session-profit");
         var bank = box("bankroll-line", text("bank-chip", "♠"), bankroll,
                 text("bankroll-unit", copy.text("bankroll.unit")));
         var intro = new Section(introCopy,
-                box("scoreboard", text("eyebrow", copy.text("bankroll.heading")), bank, sessionProfit, stats));
+                box("scoreboard", text("eyebrow", copy.text("bankroll.heading")), bank, sessionProfit));
         intro.addClassName("introduction");
         intro.getElement().setAttribute("aria-labelledby", "game-title");
         return intro;
@@ -175,7 +182,7 @@ public class BlackjackView extends Div {
 
     private Div statistic(String label, Span value, String id) {
         value.setId(id);
-        return box("statistic", value, text("statistic-label", label));
+        return box("statistic", text("statistic-label", label), value);
     }
 
     private Section table() {
@@ -184,20 +191,16 @@ public class BlackjackView extends Div {
         dealerScore.setId("dealer-score");
         playerScore.setId("player-score");
         roundNumber.setId("round-number");
-        turn.setId("turn-label");
         shoeStatus.setId("shoe-status");
         shoeNote.setId("shoe-note");
         wagerChips.setId("wager-chips");
         payoutText.setId("payout-text");
 
-        var dealer = handArea(copy.text("hand.dealer"), copy.text("hand.dealer.note"), dealerScore, dealerCards);
+        var dealer = handArea(copy.text("hand.dealer"), copy.text("hand.dealer.cards"), dealerScore, dealerCards);
         dealer.addClassName("dealer-hand");
-        var player = handArea(copy.text("hand.player"), copy.text("hand.player.note"), playerScore, playerCards);
+        var player = handArea(copy.text("hand.player"), copy.text("hand.player.cards"), playerScore, playerCards);
         player.addClassName("player-hand");
-        var divider = box("table-divider", text("table-inscription", "♣  ♦  ♠  ♥"),
-                text("table-rule", copy.text("table.rule")));
-        divider.getElement().setAttribute("aria-hidden", "true");
-        var felt = box("felt", box("table-topline", roundNumber, shoeStatus, turn), dealer, divider, player,
+        var felt = box("felt", box("table-topline", roundNumber, shoeStatus), dealer, player,
                 box("wager-spot", wagerChips, wagerLabel), shoeNote);
 
         configureButton(hit, "hit", "hit-button", copy.text("action.hit.tooltip"));
@@ -213,7 +216,8 @@ public class BlackjackView extends Div {
 
         status.add(payoutText);
         var controls = box("controls", status, box("actions", hit, stand, newRound, restart));
-        var table = new Section(felt, bettingBar(), controls);
+        betting = bettingBar();
+        var table = new Section(felt, betting, controls);
         table.addClassName("game-table");
         table.getElement().setAttribute("aria-label", copy.text("table.label"));
         return table;
@@ -227,15 +231,13 @@ public class BlackjackView extends Div {
         betAmount.setStepButtonsVisible(true);
         betAmount.setValueChangeMode(ValueChangeMode.EAGER);
         betAmount.setManualValidation(true);
-        betAmount.setHelperText(copy.text("bet.helper", formatChips(game.snapshot().maximumBet() * 2L)));
         betAmount.addValueChangeListener(event -> updateBetting(game.snapshot()));
         clearBet.setId("clear-bet");
         clearBet.addClassName("clear-bet");
         var rack = box("chip-rack", chip5, chip25, chip100, clearBet);
         rack.getElement().setAttribute("role", "group");
         rack.getElement().setAttribute("aria-label", copy.text("bet.rack.label"));
-        return box("betting-bar", betAmount,
-                box("chip-selection", text("betting-label", copy.text("bet.rack.caption")), rack));
+        return box("betting-bar", betAmount, rack);
     }
 
     private Button chipButton(int amount) {
@@ -260,9 +262,8 @@ public class BlackjackView extends Div {
         betAmount.setMax(Math.max(BlackjackGame.MIN_BET, state.maximumBet()));
         var validation = game.validateBet(selectedBet());
         betAmount.setInvalid(editable && validation != BlackjackGame.BetValidation.VALID);
-        betAmount.setHelperText(editable
-                ? copy.text("bet.helper", formatChips(state.maximumBet() * 2L))
-                : copy.text(state.canPlay() ? "bet.locked" : "bet.unavailable"));
+        betAmount.getElement().setAttribute("title", copy.text("bet.helper", formatChips(state.maximumBet() * 2L)));
+        betting.setVisible(editable);
         betAmount.setErrorMessage(validation == BlackjackGame.BetValidation.INSUFFICIENT_CHIPS
                 ? copy.text("bet.error.insufficient")
                 : copy.text("bet.error.invalid"));
@@ -275,7 +276,7 @@ public class BlackjackView extends Div {
         newRound.setEnabled(validation == BlackjackGame.BetValidation.VALID);
         restart.setVisible(state.phase() == Phase.ROUND_OVER);
         restart.setEnabled(state.phase() == Phase.ROUND_OVER);
-        newRound.setVisible(!state.outOfChips());
+        newRound.setVisible(!state.canPlay() && !state.outOfChips());
         wagerChips.setText(formatChips((state.phase() == Phase.READY ? Math.max(0, selectedBet()) : state.wager()) * 2L));
         wagerLabel.setText(copy.text(state.phase() == Phase.READY
                 ? "wager.selected" : state.canPlay() ? "wager.active" : "wager.previous"));
@@ -283,12 +284,11 @@ public class BlackjackView extends Div {
                 state.phase() == Phase.READY ? "wager.selected.label" : "wager.hand.label", wagerChips.getText()));
     }
 
-    private Section handArea(String title, String description, Span score, Div cards) {
+    private Section handArea(String title, String cardsLabel, Span score, Div cards) {
         var name = new H2(title);
         cards.getElement().setAttribute("role", "group");
-        cards.getElement().setAttribute("aria-label", copy.text("hand.cards", title));
-        var area = new Section(box("hand-heading", box("hand-name", name, score)), cards,
-                text("hand-note", description));
+        cards.getElement().setAttribute("aria-label", cardsLabel);
+        var area = new Section(box("hand-heading", box("hand-name", name, score)), cards);
         area.addClassName("hand-area");
         area.getElement().setAttribute("aria-label", title);
         return area;
@@ -298,16 +298,32 @@ public class BlackjackView extends Div {
         button.setId(id);
         button.addClassName(className);
         button.setTooltipText(tooltip);
-        button.getElement().setAttribute("aria-describedby", "status-detail");
+        button.getElement().setAttribute("aria-describedby", "round-status");
     }
 
-    private Section rules() {
+    private Button rulesButton() {
+        var dialog = new Dialog();
+        dialog.setId("rules-dialog");
+        dialog.addClassName("blackjack-rules-dialog");
+        dialog.setHeaderTitle(copy.text("rules.label"));
+        dialog.setWidth("440px");
+        dialog.setMaxWidth("calc(100vw - 32px)");
         var section = new Section(rule("01", copy.text("rule.1.title"), copy.text("rule.1.detail")),
                 rule("02", copy.text("rule.2.title"), copy.text("rule.2.detail")),
-                rule("03", copy.text("rule.3.title"), copy.text("rule.3.detail")));
+                rule("03", copy.text("rule.3.title"), copy.text("rule.3.detail")),
+                rule("04", copy.text("rule.4.title"), copy.text("rule.4.detail")),
+                new Paragraph(copy.text("footer.limits")));
         section.addClassName("rules");
-        section.getElement().setAttribute("aria-label", copy.text("rules.label"));
-        return section;
+        dialog.add(section);
+        var close = new Button(copy.text("action.close"), event -> dialog.close());
+        close.setId("close-rules");
+        dialog.getFooter().add(close);
+        add(dialog);
+        var button = new Button(copy.text("action.rules"), event -> dialog.open());
+        button.setId("show-rules");
+        button.addClassName("rules-button");
+        button.getElement().setAttribute("aria-haspopup", "dialog");
+        return button;
     }
 
     private Div rule(String number, String title, String description) {
@@ -315,7 +331,12 @@ public class BlackjackView extends Div {
     }
 
     private Footer footer() {
-        var footer = new Footer(new Span(copy.text("footer.rules")), new Span(copy.text("footer.limits")));
+        var stats = box("session-stats", statistic(copy.text("statistics.wins"), wins, "wins"),
+                statistic(copy.text("statistics.losses"), losses, "losses"),
+                statistic(copy.text("statistics.pushes"), pushes, "pushes"));
+        stats.getElement().setAttribute("role", "group");
+        stats.getElement().setAttribute("aria-label", copy.text("statistics.label"));
+        var footer = new Footer(new Span(copy.text("footer.note")), stats);
         footer.addClassName("site-footer");
         return footer;
     }
@@ -346,14 +367,9 @@ public class BlackjackView extends Div {
         dealerScore.setText(state.dealerCardHidden()
                 ? copy.text("score.showing", state.dealer().total()) : score(state.dealer()));
         playerScore.getElement().setAttribute("aria-label", copy.text("score.player", playerScore.getText()));
-        dealerScore.getElement().setAttribute("aria-label", copy.text("score.dealer", dealerScore.getText()));
+        dealerScore.getElement().setAttribute("aria-label", copy.text(state.dealerCardHidden() ? "score.dealer.hidden" : "score.dealer", dealerScore.getText()));
         roundNumber.setText(state.round() == 0 ? copy.text("game.new")
                 : copy.text("hand.number", "%02d".formatted(state.round())));
-        turn.setText(switch (state.phase()) {
-            case READY -> copy.text("turn.ready");
-            case PLAYER_TURN -> copy.text("turn.player");
-            case ROUND_OVER -> copy.text("turn.complete");
-        });
         wins.setText(Integer.toString(state.statistics().wins()));
         losses.setText(Integer.toString(state.statistics().losses()));
         pushes.setText(Integer.toString(state.statistics().pushes()));
@@ -361,8 +377,10 @@ public class BlackjackView extends Div {
         sessionProfit.setText(copy.text("profit.game", signedChips(state.sessionProfitHalfChips())));
         sessionProfit.getElement().setAttribute("data-positive", Boolean.toString(state.sessionProfitHalfChips() >= 0));
         shoeStatus.setText(copy.text("deck.status", state.shoeNumber(), state.cardsRemaining()));
-        shoeNote.setText(copy.text(state.shuffleBeforeNextRound() ? "deck.cut"
-                : state.shuffledThisRound() ? "deck.shuffled" : "deck.carry", 52 - state.cardsRemaining()));
+        shoeNote.setText(copy.text("deck.cut"));
+        shoeNote.setVisible(state.shuffleBeforeNextRound());
+        hit.setVisible(state.canPlay());
+        stand.setVisible(state.canPlay());
         hit.setEnabled(state.canPlay());
         stand.setEnabled(state.canPlay());
         updateBetting(state);
@@ -372,14 +390,18 @@ public class BlackjackView extends Div {
         statusDetail.setText(state.outOfChips()
                 ? copy.text("status.bankroll.detail", state.round())
                 : message.detail());
+        statusDetail.setVisible(state.phase() == Phase.ROUND_OVER);
+        payoutText.setVisible(state.phase() == Phase.ROUND_OVER);
         payoutText.setText(state.phase() == Phase.ROUND_OVER
                 ? copy.text("payout.complete", signedChips(state.netHalfChips()), formatChips(state.payout().halfUnits()))
-                : state.canPlay() ? copy.text("payout.active", state.wager()) : copy.text("payout.ready"));
+                : "");
+        payoutText.getElement().setAttribute("title", copy.text("payout.returned", formatChips(state.payout().halfUnits())));
         status.getElement().setAttribute("data-outcome", state.outcome().name().toLowerCase(java.util.Locale.ROOT));
         // A single, descriptive live update includes the scores after every action.
         status.getElement().setAttribute("aria-label", statusTitle.getText() + " " + statusDetail.getText() + " " + payoutText.getText()
+                + (state.phase() == Phase.ROUND_OVER ? " " + copy.text("payout.returned", formatChips(state.payout().halfUnits())) : "")
                 + (state.phase() == Phase.READY ? "" : " " + copy.text("score.player", playerScore.getText())
-                + ". " + copy.text("score.dealer", dealerScore.getText()) + "."));
+                + ". " + copy.text(state.dealerCardHidden() ? "score.dealer.hidden" : "score.dealer", dealerScore.getText()) + "."));
     }
 
     private String formatChips(long halfUnits) {
@@ -393,6 +415,8 @@ public class BlackjackView extends Div {
 
     private void renderHand(Div container, Hand hand, boolean hidden) {
         container.removeAll();
+        int count = hand.cards().isEmpty() ? 2 : hand.cards().size() + (hidden ? 1 : 0);
+        container.getStyle().set("--card-count", Integer.toString(count));
         if (hand.cards().isEmpty()) {
             container.add(PlayingCard.placeholder(copy), PlayingCard.placeholder(copy));
         } else {

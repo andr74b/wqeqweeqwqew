@@ -1,11 +1,11 @@
 # Blackjack verification
 
-Verified on **7 September 2026**, on this Mac with Microsoft OpenJDK **25.0.4.1**.
-Vaadin **25.2.6**, Spring Boot **4.1.1**, Maven wrapper **3.9.16**.
+Verified on **7 September 2026**, using Microsoft OpenJDK **25.0.4.1**,
+Vaadin **25.2.6**, Spring Boot **4.1.1** and Maven wrapper **3.9.16**.
 
 ## Automated results
 
-Final command: `./mvnw --batch-mode --no-transfer-progress clean verify`
+Command: `./mvnw --batch-mode --no-transfer-progress verify`
 
 **BUILD SUCCESS — 80 tests, 0 failures, 0 errors, 0 skipped.**
 
@@ -20,50 +20,44 @@ Final command: `./mvnw --batch-mode --no-transfer-progress clean verify`
 | BlackjackGameIT | 1, exercising 2,000 rounds | Pass |
 | ProductionPackageIT | 1 | Pass |
 
-The generated production artifact is `target/blackjack.jar`. The packaging test
-starts this actual JAR in an empty temporary directory, checks its production
-configuration and bundled dependencies, and requests the page and card CSS.
-The simulation uses 100 independent tables, independent scoring and bankroll
-calculations, and card-uniqueness checks across complete decks and multiple rounds.
-Detailed XML/text results are in `target/surefire-reports` and
-`target/failsafe-reports` after building.
+The production artifact is `target/blackjack.jar`. The packaging test starts
+that JAR in an empty temporary directory, checks production configuration,
+requests both routes and verifies that the card stylesheet is served.
+
+Component expectations reflect the shorter English/Russian messages and
+phase-specific actions. Exact half-chip profits remain visible, and the full
+returned amount remains available in the accessible result announcement.
+The test fixture retains a strong reference to its UI: Vaadin stores the current
+UI weakly, so retaining it prevents intermittent garbage-collection failures.
 
 ## Browser checks
 
-The production JAR was started with `java -jar target/blackjack.jar
---server.port=8082 --server.address=127.0.0.1`, and its real Vaadin client was
-exercised in Google Chrome at localhost:8082.
+The actual production JAR was checked in the Codex in-app browser at
+`http://127.0.0.1:8082`, in both languages.
 
-- Initial state: `NEW GAME`, 1,000 chips, 52 cards, zero results, an initial
-  25-chip selection, and **Deal First Hand** enabled. Hit and Stand are disabled.
-- Betting: the field advertises `5–1,000 chips · all-in allowed`; its actual max
-  is 1,000. After committing 25 chips, the max becomes the 975-chip spendable
-  bankroll and the field remains locked until the hand ends.
-- Game lifecycle: a deal changes the heading to `HAND 01`; the next deal keeps
-  the bankroll, deck and results, while **New Game** resets them after a completed
-  hand. Reset remains unavailable while a wager is active.
-- English/Russian routing: a live English hand was switched from `/` to `/ru`.
-  Chrome showed the Russian page title, `lang=ru`, `РУКА 01`, localized controls,
-  status, card names and number formatting while preserving that hand and bankroll.
-- Gameplay smoke test: dealing concealed the hole card and locked the wager;
-  Stand revealed the dealer, settled the hand once, updated the counter and showed
-  both **Ещё рука** and **Новая игра**.
-- Responsive viewports checked: **320×568**, **390×844**, **768×1024**,
-  **1280×720**, and **1440×757**. At every size the document dimensions exactly
-  matched the viewport and measured bounds found no gameplay control outside it.
-  The completed Russian state—with all four action buttons—also fit at 320×568.
-- The 320×568 render was visually inspected: hands remain side by side, cards
-  overlap safely, the wager field and chip rack remain operable, and the result
-  plus all actions stay on screen without horizontal or vertical page scrolling.
-- No Chrome warning, error, or uncaught-exception entries were recorded during
-  the final route, interaction, and resize checks.
+- Initial state: 1,000 chips, a 25-chip bet, 52 cards, and one primary Deal action.
+- Active hand: the stake is deducted, the dealer's second card stays hidden,
+  betting controls disappear, and only Hit/Stand are shown.
+- Completed hand: the cards remain clear of the betting controls, the result and
+  signed profit are shown, and Deal again/New game become available.
+- The English/Russian switch uses server-side navigation. A live hand with an
+  18-point player total, 975 chips and 48 cards remaining retained the same cards,
+  balance and deck count when switched from English to Russian.
+- Rules open in a scrollable dialog. At 320px width the close button remains
+  available while the longer guide scrolls within the dialog.
+- Responsive measurements covered 320×568, 390×844, 640×596, 768×1024,
+  1280×720 and 1440×900. No horizontal document overflow or intersections between
+  the header, introduction, felt, betting controls, result area and footer were
+  found. Card bounds stayed within their hand areas.
+- At the shortest sizes, completed results can add vertical page scrolling;
+  content is no longer forced into overlapping fixed-height rows.
+- A temporary static stress fixture used the production stylesheet with eleven
+  cards per hand. Card containment and exposed rank corners were checked at
+  phone, tablet and desktop widths. At narrow tablet widths, long hands stack to
+  keep the rank of every card readable. This was a layout fixture, not a dealt
+  game or a new production route.
 
-The UI checks above are an interactive smoke test, not a committed automated
-browser suite. Rule edge cases, including both-natural pushes, dealer natural,
-soft 17, multiple aces, ordinary pushes, and repeated commands, are covered by
-the deterministic automated suites. Physical iOS/Android devices and separate
-Safari/Firefox engines were not tested.
-
-The temporary test server on port 8082 and temporary browser tabs were stopped
-after verification. Existing servers were left running. Stop the older game in
-its terminal with Ctrl+C, then run `./run-production.sh` to load the new build.
+These are interactive browser checks, not a committed browser test suite.
+Physical iOS/Android devices and separate Safari/Firefox engines were not tested.
+Automated reports are under `target/surefire-reports` and
+`target/failsafe-reports`. The local production preview remains on port 8082.

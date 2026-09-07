@@ -39,7 +39,7 @@ without resetting the current game.
    for the frontend build. Initial downloads need internet access. No separate
    Maven, npm, or Node installation is required.
 
-4. Open **http://localhost:8080** in a browser. Click **Deal First Hand** to play.
+4. Open **http://localhost:8080** in a browser. Click **Deal** to play.
    Russian is available at **http://localhost:8080/ru** or from the EN/RU switch.
 
 5. To stop the server, press **Ctrl+C** in the terminal that is running it.
@@ -107,15 +107,15 @@ restart, or instance replacement resets active games and bankrolls.
 ## Rules and controls
 
 - One **game** starts with 1,000 chips and contains many **hands**. The heading
-  shows `NEW GAME` before the first deal and `HAND 01`, `HAND 02`, and so on
-  afterward. **Deal Next Hand** keeps the bankroll, deck, and results. After a
-  completed hand, **New Game** explicitly resets all of them.
+  shows `New game` before the first deal and `Hand 01`, `Hand 02`, and so on
+  afterward. **Deal again** keeps the bankroll, deck, and results. After a
+  completed hand, **New game** explicitly resets all of them.
 - Choose your stake using the **5 / 25 / 100 chip buttons** (each adds to the
   selected bet) or the **Your bet** field. **Clear** removes the selection.
   Bets start at 5 chips, use increments of 5, and can be as high as the current
   bankroll rounded down to that step. An all-in bet is allowed; there is no
   arbitrary fixed maximum.
-- **Deal First Hand / Deal Next Hand** commits the selected stake and deals alternately to the player
+- **Deal / Deal again** commits the selected stake and deals alternately to the player
   and dealer. The stake is deducted before dealing, and cannot change during a
   hand. The dealer's second card stays face down during the player's turn.
 - The **same 52-card deck persists across hands**. Dealt cards are not returned
@@ -137,26 +137,28 @@ restart, or instance replacement resets active games and bankrolls.
   **all 17s, including soft 17**. Dealer busts lose; otherwise the higher total
   wins. Equal totals are a **push**, meaning neither side wins.
 - The deal button is available before the first hand and after a result. It is
-  disabled during a hand. Hit and Stand are disabled outside the player's turn.
+  hidden during a hand. Hit and Stand appear only during the player's turn.
   The rules engine also rejects out-of-turn commands and repeated result actions.
 - Start with **1,000 virtual chips**. A normal win pays **1:1** profit; blackjack
   pays **3:2**; a push returns the stake; a loss forfeits it. A 25-chip win returns
   50 chips including the original stake. A 5-chip blackjack returns 12.5 chips,
   for 7.5 profit. Accounting uses integer half-chip units, so no payout is rounded.
-- Results show the hand's net profit/loss and the amount returned, including the
-  stake. The bankroll displays spendable chips; the gold table chip shows the
+- Results show the hand's net profit/loss. The amount returned, including the
+  stake, is available in the payout tooltip and screen-reader announcement. The bankroll displays spendable chips; the gold table chip shows the
   wager. Game profit includes the stake still in play until a hand settles.
-- A bankroll below the 5-chip table minimum ends the game. **New Game** then
+- A bankroll below the 5-chip table minimum ends the game. **New game** then
   resets the bankroll, deck and counters. The same reset is also available after
   any completed hand; it is never allowed while a wager is still in play.
 - Wins, losses, and pushes accumulate in the current game. These chips have no
   monetary value. Splitting, doubling, surrender, and insurance are not included.
   There is no five-card automatic-win rule.
-- The desktop, tablet, and phone layouts keep every gameplay control in one
-  viewport without vertical or horizontal page scrolling. Cards overlap when a
-  hand grows. Explanatory rules remain visible on larger screens and are hidden
-  on compact screens, where the same information is still reflected in labels,
-  status messages, and tooltips.
+- The interface focuses on the cards, balance and current action. The **Rules**
+  button opens a short guide in either language. Betting controls appear between
+  hands; Hit and Stand appear while playing. Result messages stay concise.
+- Phones stack the hands vertically. Larger screens place them side by side;
+  hands with seven or more cards stack at widths up to 900px so card ranks remain
+  readable. Standard phone and desktop screens fit the game comfortably. Short
+  screens, longer messages and enlarged text may scroll rather than clip content.
 - Buttons support keyboard Tab navigation and Enter/Space activation. Cards
   have readable suit/rank labels, results use a polite live region, and focus
   moves to the next usable control without jumping the page.
@@ -199,7 +201,7 @@ The suite contains **78 unit/component cases and 2 integration tests**:
   uniqueness across whole decks, including multiple rounds and reshuffles.
 - `ProductionPackageIT`: inspects the built JAR, starts it on a temporary port
   from an empty directory, verifies production mode, requests both language routes,
-  and validates the responsive single-screen stylesheet. It shuts down its own process afterwards.
+  and validates the responsive stylesheet. It shuts down its own process afterwards.
 
 Reports are written to `target/surefire-reports` and `target/failsafe-reports`.
 The real production UI was also checked in the browser; see [TESTING.md](TESTING.md).
@@ -227,9 +229,9 @@ src/main/resources/META-INF/resources/
 src/test/java/                 Rules, component, and integration tests
 ```
 
-Each Vaadin `UI`—normally one browser tab—owns one `BlackjackGame`. The English
-and Russian routes reuse that tab-local game, so changing language preserves the
-hand and bankroll. There is **no application-wide mutable singleton or static game
+Each Vaadin `UI`—normally one browser tab—owns one `BlackjackGame`. The language buttons navigate within Vaadin and explicitly carry the current
+game into the destination route, including after a refresh. Changing language
+preserves the hand and bankroll. There is **no application-wide mutable singleton or static game
 state**. Different users and different tabs have independent hands, decks, and
 results, even when tabs share an HTTP session. Vaadin's session lock serializes
 that session's requests. The core game is plain
