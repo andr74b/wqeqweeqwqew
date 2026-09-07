@@ -6,6 +6,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.select.Select;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,12 +38,13 @@ class SpanishBlackjackViewTest {
     }
 
     @Test
-    void spanishRouteLocalizesTheWholeGameAndLanguageSwitcher() {
+    void spanishRouteLocalizesTheWholeGameAndLanguageDropdown() {
         assertEquals("Haz tu apuesta", component("status-title", H2.class).getText());
         assertEquals("Repartir", button("new-round").getText());
-        assertEquals("true", button("language-es").getElement().getAttribute("aria-pressed"));
-        assertEquals("false", button("language-en").getElement().getAttribute("aria-pressed"));
-        assertEquals("false", button("language-ru").getElement().getAttribute("aria-pressed"));
+        assertEquals("es", languageSelect().getValue());
+        assertEquals("🇬🇧 English", languageSelect().getItemLabelGenerator().apply("en"));
+        assertEquals("🇷🇺 Русский", languageSelect().getItemLabelGenerator().apply("ru"));
+        assertEquals("🇪🇸 Español", languageSelect().getItemLabelGenerator().apply("es"));
 
         button("new-round").click();
 
@@ -60,6 +62,11 @@ class SpanishBlackjackViewTest {
 
     private Button button(String id) {
         return component(id, Button.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Select<String> languageSelect() {
+        return (Select<String>) component("language-select", Select.class);
     }
 
     private <T extends Component> T component(String id, Class<T> type) {
