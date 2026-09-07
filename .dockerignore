@@ -1,0 +1,10 @@
+.git
+.gitignore
+.idea
+.DS_Store
+target
+node_modules
+.vaadin
+src/main/frontend/generated
+src/main/bundles
+*.iml

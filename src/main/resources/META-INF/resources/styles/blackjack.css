@@ -1,0 +1,261 @@
+/* Vaadin 25 stylesheet API; all game styles are scoped to this view. */
+html {
+    --lumo-font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+    --lumo-primary-color: #235846;
+    --lumo-primary-text-color: #235846;
+    --lumo-border-radius-m: 8px;
+    --lumo-base-color: #faf9f5;
+    background: #f5f3ed;
+}
+
+body { margin: 0; }
+.blackjack-app, .blackjack-app * { box-sizing: border-box; }
+.blackjack-app {
+    --ink: #253d33;
+    --muted: #68736b;
+    --paper: #f5f3ed;
+    --felt: #205340;
+    --card-width: 86px;
+    --card-height: 120px;
+    min-height: 100dvh;
+    color: var(--ink);
+    background: var(--paper);
+    padding: 0 48px;
+    font-family: var(--lumo-font-family);
+    -webkit-font-smoothing: antialiased;
+}
+
+.blackjack-app h1, .blackjack-app h2, .blackjack-app p { margin: 0; color: inherit; }
+.blackjack-app .site-header {
+    max-width: 1184px;
+    margin: auto;
+    height: 88px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dedfd5;
+}
+.blackjack-app .brand { display: flex; align-items: center; gap: 12px; font-size: 17px; font-weight: 600; letter-spacing: -.5px; }
+.blackjack-app .brand-mark { font-family: Georgia, serif; font-size: 31px; }
+.blackjack-app .header-note { color: var(--muted); font-size: 10px; letter-spacing: 1.7px; }
+.blackjack-app .content { max-width: 1000px; margin: 0 auto; }
+.blackjack-app .introduction { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; padding: 35px 0 26px; }
+.blackjack-app .eyebrow { font-size: 9px; letter-spacing: 1.8px; font-weight: 600; color: var(--muted); }
+.blackjack-app h1 { font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif; font-size: 62px; line-height: 1.1; font-weight: 500; letter-spacing: -2.7px; margin: 6px 0 9px; }
+.blackjack-app .intro-copy p { font-size: 13px; color: var(--muted); }
+.blackjack-app .scoreboard { text-align: center; padding-bottom: 3px; }
+.blackjack-app .session-stats { display: flex; gap: 0; margin-top: 10px; }
+.blackjack-app .statistic { min-width: 72px; display: flex; flex-direction: column; gap: 4px; border-left: 1px solid #dcded3; }
+.blackjack-app .statistic:first-child { border: 0; }
+.blackjack-app .statistic > span:first-child { font-family: Georgia, serif; font-size: 25px; line-height: 1; font-variant-numeric: tabular-nums; }
+.blackjack-app .statistic-label { font-size: 10px; color: var(--muted); }
+
+.blackjack-app .game-table { border-radius: 15px; box-shadow: 0 8px 28px #233d3310; border: 1px solid #daddd0; overflow: hidden; }
+.blackjack-app .felt {
+    color: #f4f2df;
+    background: radial-gradient(ellipse at 50% 45%, #2b624d 0%, var(--felt) 85%);
+    padding: 21px 36px 26px;
+    position: relative;
+}
+.blackjack-app .felt::before { content: ""; position: absolute; inset: 11px; border: 1px solid #dce5c51f; border-radius: 8px; pointer-events: none; }
+.blackjack-app .table-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 9px; letter-spacing: 1.5px; font-weight: 500; color: #ccd9c7; }
+.blackjack-app .turn-label { display: flex; align-items: center; gap: 7px; }
+.blackjack-app .turn-label::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: #d5d7a4; }
+.blackjack-app .hand-area { display: flex; align-items: center; flex-direction: column; }
+.blackjack-app .hand-heading { margin: 16px 0 12px; min-height: 26px; }
+.blackjack-app .hand-name { display: flex; align-items: center; gap: 10px; }
+.blackjack-app .hand-name h2 { font-size: 13px; font-weight: 500; letter-spacing: .3px; }
+.blackjack-app .hand-score { font-size: 11px; font-weight: 500; background: #ffffff12; border: 1px solid #ffffff20; border-radius: 5px; padding: 3px 9px; min-width: 30px; text-align: center; font-variant-numeric: tabular-nums; }
+.blackjack-app .cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; min-height: var(--card-height); }
+.blackjack-app .hand-note { margin-top: 10px; font-size: 10px; color: #b9cdbc; text-align: center; }
+.blackjack-app .table-divider { max-width: 550px; margin: 17px auto 0; display: flex; flex-direction: column; align-items: center; position: relative; color: #d3d4a8; }
+.blackjack-app .table-divider::before, .blackjack-app .table-divider::after { content: ""; position: absolute; top: 14px; width: 29%; height: 1px; background: #d8deb12b; }
+.blackjack-app .table-divider::before { left: 0; }
+.blackjack-app .table-divider::after { right: 0; }
+.blackjack-app .table-inscription { font-family: Georgia, serif; font-size: 17px; letter-spacing: 5px; }
+.blackjack-app .table-rule { font-size: 8px; letter-spacing: 1.3px; margin-top: 3px; }
+.blackjack-app .table-divider + .hand-area .hand-heading { margin-top: 17px; }
+
+/* Upright playing cards with mirrored indices and traditional pip arrangements. */
+.blackjack-app .playing-card { width: var(--card-width); height: var(--card-height); flex: 0 0 var(--card-width); position: relative; border-radius: 7px; background: #fffef9; color: #23372e; box-shadow: 0 3px 6px #062c3340; border: 1px solid #fffff2; }
+.blackjack-app .red-suit { color: #b3443f; }
+.blackjack-app .card-face { position: absolute; inset: 0; font-family: Georgia, "Times New Roman", serif; }
+.blackjack-app .card-corner { position: absolute; display: flex; flex-direction: column; align-items: center; font-weight: 600; line-height: .96; font-size: 17px; letter-spacing: -1px; gap: 2px; }
+.blackjack-app .card-corner span + span { font-size: 13px; letter-spacing: 0; }
+.blackjack-app .top-corner { top: 7px; left: 6px; }
+.blackjack-app .bottom-corner { bottom: 7px; right: 6px; transform: rotate(180deg); }
+.blackjack-app .card-center { position: absolute; inset: 19px 20px; display: flex; align-items: center; justify-content: center; }
+.blackjack-app .ace-pip { font-size: 43px; }
+.blackjack-app .face-value { flex-direction: column; border: 1px solid currentColor; margin: 3px 0; gap: 4px; }
+.blackjack-app .face-value span:first-child { font-size: 30px; line-height: 1; }
+.blackjack-app .face-value span:last-child { font-size: 19px; line-height: 1; }
+.blackjack-app .pips { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(5, 1fr); font-size: 17px; line-height: 1; text-align: center; }
+.blackjack-app .pips > span { align-self: center; }
+.blackjack-app .pips > span:nth-child(1) { grid-area: 1 / 1; }
+.blackjack-app .pips > span:nth-child(2) { grid-area: 1 / 3; }
+.blackjack-app .pips > span:nth-child(3) { grid-area: 5 / 1; transform: rotate(180deg); }
+.blackjack-app .pips > span:nth-child(4) { grid-area: 5 / 3; transform: rotate(180deg); }
+.blackjack-app .pips-2 > span:nth-child(1), .blackjack-app .pips-3 > span:nth-child(1) { grid-area: 1 / 2; }
+.blackjack-app .pips-2 > span:nth-child(2), .blackjack-app .pips-3 > span:nth-child(2) { grid-area: 5 / 2; transform: rotate(180deg); }
+.blackjack-app .pips-3 > span:nth-child(3), .blackjack-app .pips-5 > span:nth-child(5) { grid-area: 3 / 2; transform: none; }
+.blackjack-app .pips-6 > span:nth-child(5), .blackjack-app .pips-7 > span:nth-child(5), .blackjack-app .pips-8 > span:nth-child(5) { grid-area: 3 / 1; }
+.blackjack-app .pips-6 > span:nth-child(6), .blackjack-app .pips-7 > span:nth-child(6), .blackjack-app .pips-8 > span:nth-child(6) { grid-area: 3 / 3; }
+.blackjack-app .pips-7 > span:nth-child(7), .blackjack-app .pips-8 > span:nth-child(7) { grid-area: 2 / 2; }
+.blackjack-app .pips-8 > span:nth-child(8) { grid-area: 4 / 2; transform: rotate(180deg); }
+.blackjack-app .pips-9 > span:nth-child(5), .blackjack-app .pips-10 > span:nth-child(5) { grid-area: 2 / 1; }
+.blackjack-app .pips-9 > span:nth-child(6), .blackjack-app .pips-10 > span:nth-child(6) { grid-area: 2 / 3; }
+.blackjack-app .pips-9 > span:nth-child(7), .blackjack-app .pips-10 > span:nth-child(7) { grid-area: 4 / 1; transform: rotate(180deg); }
+.blackjack-app .pips-9 > span:nth-child(8), .blackjack-app .pips-10 > span:nth-child(8) { grid-area: 4 / 3; transform: rotate(180deg); }
+.blackjack-app .pips-9 > span:nth-child(9) { grid-area: 3 / 2; }
+.blackjack-app .pips-10 > span:nth-child(9) { grid-area: 2 / 2; transform: translateY(-6px); }
+.blackjack-app .pips-10 > span:nth-child(10) { grid-area: 4 / 2; transform: translateY(6px) rotate(180deg); }
+.blackjack-app .card-back { display: grid; place-items: center; background-color: #eceddc; background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, #35624d30 4px, #35624d30 5px), repeating-linear-gradient(-45deg, transparent, transparent 4px, #35624d30 4px, #35624d30 5px); border: 5px solid #fffef9; }
+.blackjack-app .card-back > span { display: grid; place-items: center; font-size: 30px; width: 44px; height: 53px; background: #e7eadb; border: 1px solid #65806b; outline: 3px solid #e7eadb; border-radius: 50%; }
+.blackjack-app .card-placeholder { display: grid; place-items: center; background: #ffffff03; border: 1px dashed #e8ecd24d; box-shadow: none; color: #d9e1c63d; font: 36px Georgia, serif; }
+
+.blackjack-app .controls { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 24px 28px; min-height: 105px; background: #fdfcf8; }
+.blackjack-app .round-status { min-width: 0; }
+.blackjack-app .round-status h2 { font-family: "Iowan Old Style", Georgia, serif; font-size: 22px; line-height: 1.25; font-weight: 500; letter-spacing: -.4px; }
+.blackjack-app .round-status p { color: var(--muted); font-size: 11px; line-height: 1.6; margin-top: 6px; }
+.blackjack-app .round-status[data-outcome="player_bust"] h2, .blackjack-app .round-status[data-outcome="dealer_win"] h2, .blackjack-app .round-status[data-outcome="dealer_blackjack"] h2 { color: #924a3e; }
+.blackjack-app .actions { display: flex; gap: 8px; flex-shrink: 0; }
+.blackjack-app vaadin-button { height: 44px; min-width: 78px; margin: 0; padding: 0 18px; border-radius: 7px; border: 1px solid #cad2c4; background: transparent; color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer; transition: background-color .15s; }
+.blackjack-app vaadin-button::part(label) { line-height: 1.2; }
+.blackjack-app vaadin-button.hit-button, .blackjack-app vaadin-button.new-round-button { background: #25583f; border-color: #25583f; color: #fffef4; }
+.blackjack-app vaadin-button.new-round-button { margin-left: 6px; min-width: 117px; }
+.blackjack-app vaadin-button:hover:not([disabled]) { background: #e6eadf; }
+.blackjack-app vaadin-button.hit-button:hover:not([disabled]), .blackjack-app vaadin-button.new-round-button:hover:not([disabled]) { background: #153f2d; }
+.blackjack-app vaadin-button[disabled] { background: #eeeee7; color: #93998e; border-color: #e0e2d8; cursor: default; }
+.blackjack-app vaadin-button[focus-ring] { outline: 3px solid #aa8942; outline-offset: 3px; }
+.blackjack-app .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; margin: 26px 0 28px; }
+.blackjack-app .rule { display: flex; gap: 13px; }
+.blackjack-app .rule-number { font-size: 10px; color: #858f7c; padding-top: 4px; }
+.blackjack-app .rule-copy h2 { font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+.blackjack-app .rule-copy p { font-size: 11px; line-height: 1.7; color: var(--muted); }
+.blackjack-app .site-footer { max-width: 1184px; margin: 0 auto; padding: 20px 0 24px; border-top: 1px solid #dedfd5; display: flex; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 10px; }
+
+@media (min-width: 1600px) {
+    .blackjack-app .introduction { padding-top: 48px; padding-bottom: 32px; }
+    .blackjack-app .felt { padding-top: 27px; padding-bottom: 33px; }
+}
+@media (max-width: 850px) {
+    .blackjack-app { padding: 0 26px; }
+    .blackjack-app .controls { align-items: flex-start; flex-direction: column; gap: 18px; }
+    .blackjack-app .actions { width: 100%; }
+    .blackjack-app vaadin-button { flex: 1; }
+    .blackjack-app .rules { gap: 20px; }
+}
+@media (max-width: 540px) {
+    .blackjack-app { --card-width: 66px; --card-height: 94px; padding: 0 16px; }
+    .blackjack-app .site-header { height: 60px; }
+    .blackjack-app .brand { font-size: 15px; gap: 8px; }
+    .blackjack-app .brand-mark { font-size: 26px; }
+    .blackjack-app .header-note { display: none; }
+    .blackjack-app .introduction { gap: 20px; align-items: flex-start; flex-direction: column; padding: 20px 0 20px; }
+    .blackjack-app h1 { font-size: 50px; margin-top: 5px; }
+    .blackjack-app .intro-copy p { font-size: 12px; line-height: 1.6; max-width: 285px; }
+    .blackjack-app .scoreboard { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0; }
+    .blackjack-app .scoreboard .eyebrow { font-size: 8px; letter-spacing: 1.3px; }
+    .blackjack-app .session-stats { margin: 0; }
+    .blackjack-app .statistic { min-width: 57px; gap: 3px; }
+    .blackjack-app .statistic > span:first-child { font-size: 20px; }
+    .blackjack-app .statistic-label { font-size: 9px; }
+    .blackjack-app .game-table { border-radius: 12px; }
+    .blackjack-app .felt { padding: 20px 20px 23px; }
+    .blackjack-app .table-topline { font-size: 7px; letter-spacing: 1.1px; }
+    .blackjack-app .hand-heading { margin: 16px 0 10px; }
+    .blackjack-app .cards { gap: 8px; }
+    .blackjack-app .hand-note { font-size: 8px; }
+    .blackjack-app .table-divider { margin-top: 14px; }
+    .blackjack-app .table-divider::before, .blackjack-app .table-divider::after { width: 22%; }
+    .blackjack-app .table-rule { font-size: 6px; letter-spacing: 1px; }
+    .blackjack-app .table-inscription { font-size: 14px; }
+    .blackjack-app .table-divider + .hand-area .hand-heading { margin-top: 13px; }
+    .blackjack-app .playing-card { border-radius: 5px; }
+    .blackjack-app .card-corner { font-size: 13px; gap: 1px; }
+    .blackjack-app .card-corner span + span { font-size: 10px; }
+    .blackjack-app .top-corner { top: 5px; left: 4px; }
+    .blackjack-app .bottom-corner { bottom: 5px; right: 4px; }
+    .blackjack-app .card-center { inset: 15px 15px; }
+    .blackjack-app .pips { font-size: 12px; }
+    .blackjack-app .ace-pip { font-size: 33px; }
+    .blackjack-app .face-value span:first-child { font-size: 23px; }
+    .blackjack-app .face-value span:last-child { font-size: 13px; }
+    .blackjack-app .card-back { border-width: 4px; }
+    .blackjack-app .card-back > span { width: 32px; height: 43px; font-size: 23px; }
+    .blackjack-app .controls { padding: 20px 17px; gap: 17px; }
+    .blackjack-app .round-status h2 { font-size: 20px; }
+    .blackjack-app .round-status p { font-size: 10px; }
+    .blackjack-app .actions { gap: 6px; }
+    .blackjack-app vaadin-button { min-width: 0; height: 46px; padding: 0 12px; font-size: 11px; }
+    .blackjack-app vaadin-button.new-round-button { min-width: 103px; margin-left: 2px; }
+    .blackjack-app .rules { grid-template-columns: 1fr; gap: 17px; margin: 25px 5px; }
+    .blackjack-app .rule { gap: 14px; }
+    .blackjack-app .rule-copy h2 { margin-bottom: 3px; }
+    .blackjack-app .site-footer { flex-direction: column; gap: 7px; line-height: 1.6; font-size: 9px; padding-bottom: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .blackjack-app vaadin-button { transition: none; }
+}
+
+/* Bankroll, persistent deck and physical chip controls. */
+.blackjack-app .scoreboard { min-width: 225px; }
+.blackjack-app .bankroll-line { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px; }
+.blackjack-app .bankroll-amount { font-family: Georgia, serif; font-size: 35px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.blackjack-app .bankroll-unit { font-size: 11px; color: var(--muted); align-self: flex-end; margin-bottom: 4px; }
+.blackjack-app .bank-chip { width: 29px; height: 29px; border: 3px dashed #f1e2ba; outline: 1px solid #a68d54; border-radius: 50%; background: #9f7e3a; color: #fff5d9; display: grid; place-items: center; font-size: 15px; margin-right: 3px; }
+.blackjack-app .session-profit { display: block; font-size: 10px; color: #396546; margin-top: 5px; }
+.blackjack-app .session-profit[data-positive="false"] { color: #924a3e; }
+.blackjack-app .scoreboard .session-stats { justify-content: center; margin-top: 12px; }
+.blackjack-app .scoreboard .statistic { min-width: 61px; }
+.blackjack-app .scoreboard .statistic > span:first-child { font-size: 18px; }
+.blackjack-app .shoe-status { font-size: 8px; letter-spacing: 1px; }
+.blackjack-app .shoe-note { display: block; color: #ccdbc8; font-size: 9px; text-align: center; margin-top: 12px; }
+.blackjack-app .wager-spot { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; }
+.blackjack-app .wager-chip { min-width: 47px; height: 47px; padding: 0 4px; border: 4px dashed #f4e6bc; outline: 1px solid #c3aa66; background: #ad8a44; color: #fffbe9; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; box-shadow: 0 3px 0 #795c29; }
+.blackjack-app .wager-label { color: #d9dabb; font-size: 8px; letter-spacing: 1.2px; }
+.blackjack-app .betting-bar { background: #fdfcf8; padding: 16px 28px; display: flex; gap: 32px; align-items: center; border-bottom: 1px solid #e8e8df; }
+.blackjack-app vaadin-integer-field { width: 175px; flex: 0 0 175px; font-size: 13px; --lumo-size-m: 40px; }
+.blackjack-app vaadin-integer-field::part(label) { font-size: 11px; font-weight: 600; }
+.blackjack-app vaadin-integer-field::part(input-field) { border: 1px solid #cbd3c6; border-radius: 6px; background: #fafbf5; }
+.blackjack-app vaadin-integer-field::part(helper-text), .blackjack-app vaadin-integer-field::part(error-message) { font-size: 10px; }
+.blackjack-app .betting-label { font-size: 8px; letter-spacing: 1px; color: var(--muted); }
+.blackjack-app .chip-rack { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+.blackjack-app vaadin-button.bet-chip { flex: 0 0 46px; width: 46px; min-width: 46px; height: 46px; padding: 0; border-radius: 50%; border: 4px dashed #fff7; outline: 1px solid #a9b19f; background: #466c88; color: #fff; font-family: Georgia, serif; font-size: 14px; box-shadow: 0 2px 0 #344e6099; }
+.blackjack-app vaadin-button.chip-25 { background: #b26257; }
+.blackjack-app vaadin-button.chip-100 { background: #4d604d; }
+.blackjack-app vaadin-button.bet-chip:hover:not([disabled]) { filter: brightness(1.12); background: #466c88; }
+.blackjack-app vaadin-button.chip-25:hover:not([disabled]) { background: #b26257; }
+.blackjack-app vaadin-button.chip-100:hover:not([disabled]) { background: #4d604d; }
+.blackjack-app vaadin-button.bet-chip[disabled] { opacity: .45; cursor: default; }
+.blackjack-app vaadin-button.clear-bet { font-size: 10px; border: 0; padding: 0 8px; min-width: 44px; color: var(--muted); }
+.blackjack-app .payout-text { display: block; font-size: 10px; font-weight: 600; margin-top: 7px; color: #476644; }
+.blackjack-app .round-status[data-outcome="player_bust"] .payout-text,
+.blackjack-app .round-status[data-outcome="dealer_win"] .payout-text,
+.blackjack-app .round-status[data-outcome="dealer_blackjack"] .payout-text { color: #924a3e; }
+.blackjack-app .actions [hidden] { display: none !important; }
+
+@media (min-width: 851px) {
+    .blackjack-app .wager-spot { position: absolute; right: 40px; bottom: 66px; flex-direction: column; gap: 8px; margin: 0; }
+    .blackjack-app .hand-area { padding-inline: 115px; }
+}
+@media (max-width: 540px) {
+    .blackjack-app .scoreboard { display: grid; grid-template-columns: 1fr auto; gap: 5px 16px; text-align: left; }
+    .blackjack-app .scoreboard > .eyebrow { grid-column: 1; }
+    .blackjack-app .bankroll-line { grid-column: 1; margin: 0; justify-content: flex-start; }
+    .blackjack-app .bankroll-amount { font-size: 29px; }
+    .blackjack-app .session-profit { grid-column: 1; margin: 0; font-size: 9px; }
+    .blackjack-app .scoreboard .session-stats { grid-column: 2; grid-row: 1 / 4; margin: 0; align-self: center; }
+    .blackjack-app .scoreboard .statistic { min-width: 39px; }
+    .blackjack-app .bank-chip { width: 24px; height: 24px; font-size: 12px; }
+    .blackjack-app .table-topline { flex-wrap: wrap; }
+    .blackjack-app .shoe-status { order: 3; width: 100%; text-align: center; margin-top: 2px; font-size: 7px; }
+    .blackjack-app .table-rule { max-width: 180px; text-align: center; line-height: 1.5; }
+    .blackjack-app .shoe-note { font-size: 8px; line-height: 1.5; }
+    .blackjack-app .betting-bar { padding: 12px 17px 17px; gap: 6px; flex-direction: column; align-items: stretch; }
+    .blackjack-app vaadin-integer-field { width: 100%; flex: auto; --lumo-size-m: 44px; }
+    .blackjack-app .chip-selection { margin-top: 5px; }
+    .blackjack-app .chip-rack { justify-content: space-between; gap: 8px; }
+    .blackjack-app .payout-text { font-size: 10px; line-height: 1.6; }
+    .blackjack-app .controls { padding-top: 17px; }
+}
