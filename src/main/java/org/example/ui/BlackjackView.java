@@ -138,17 +138,27 @@ public class BlackjackView extends Div {
         // Navigate within the Vaadin UI; plain anchors can create a new browser UI.
         var english = new Button("EN", event -> switchLanguage(BlackjackView.class));
         var russian = new Button("RU", event -> switchLanguage(RussianBlackjackView.class));
+        var spanish = new Button("ES", event -> switchLanguage(SpanishBlackjackView.class));
         english.setId("language-en");
         russian.setId("language-ru");
+        spanish.setId("language-es");
         english.setAriaLabel("English");
         russian.setAriaLabel("Русский");
-        english.getElement().setAttribute("aria-pressed", Boolean.toString(!locale.getLanguage().equals("ru")));
-        russian.getElement().setAttribute("aria-pressed", Boolean.toString(locale.getLanguage().equals("ru")));
+        spanish.setAriaLabel("Español");
+        var language = locale.getLanguage();
+        english.getElement().setAttribute("aria-pressed", Boolean.toString(language.equals("en")));
+        russian.getElement().setAttribute("aria-pressed", Boolean.toString(language.equals("ru")));
+        spanish.getElement().setAttribute("aria-pressed", Boolean.toString(language.equals("es")));
         english.addClassName("language-option");
         russian.addClassName("language-option");
-        var activeLanguage = locale.getLanguage().equals("ru") ? russian : english;
+        spanish.addClassName("language-option");
+        var activeLanguage = switch (language) {
+            case "ru" -> russian;
+            case "es" -> spanish;
+            default -> english;
+        };
         activeLanguage.addClassName("active");
-        var languageSwitch = box("language-switch", english, russian);
+        var languageSwitch = box("language-switch", english, russian, spanish);
         languageSwitch.getElement().setAttribute("role", "group");
         languageSwitch.getElement().setAttribute("aria-label", copy.text("language.label"));
         var header = new Header(box("brand", mark, new Span(copy.text("brand.name"))),
