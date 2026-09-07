@@ -4,6 +4,8 @@ A responsive, single-player Blackjack game built with **Java 25**, **Vaadin Flow
 25.2.6**, and **Spring Boot 4.1.1**. The UI uses Java Vaadin components and ordinary
 CSS playing cards. All rules and hidden cards stay on the server. Build a
 1,000-chip virtual bankroll while playing through a persistent 52-card deck.
+English is served at `/` and Russian at `/ru`; the in-game switch changes language
+without resetting the current game.
 
 ## Run from the terminal (macOS)
 
@@ -37,7 +39,8 @@ CSS playing cards. All rules and hidden cards stay on the server. Build a
    for the frontend build. Initial downloads need internet access. No separate
    Maven, npm, or Node installation is required.
 
-4. Open **http://localhost:8080** in a browser. Click **New Round** to deal.
+4. Open **http://localhost:8080** in a browser. Click **Deal First Hand** to play.
+   Russian is available at **http://localhost:8080/ru** or from the EN/RU switch.
 
 5. To stop the server, press **Ctrl+C** in the terminal that is running it.
 
@@ -103,13 +106,19 @@ restart, or instance replacement resets active games and bankrolls.
 
 ## Rules and controls
 
+- One **game** starts with 1,000 chips and contains many **hands**. The heading
+  shows `NEW GAME` before the first deal and `HAND 01`, `HAND 02`, and so on
+  afterward. **Deal Next Hand** keeps the bankroll, deck, and results. After a
+  completed hand, **New Game** explicitly resets all of them.
 - Choose your stake using the **5 / 25 / 100 chip buttons** (each adds to the
   selected bet) or the **Your bet** field. **Clear** removes the selection.
-  Bets must be 5–500 chips in increments of 5 and cannot exceed your bankroll.
-- **New Round** commits the selected stake and deals alternately to the player
+  Bets start at 5 chips, use increments of 5, and can be as high as the current
+  bankroll rounded down to that step. An all-in bet is allowed; there is no
+  arbitrary fixed maximum.
+- **Deal First Hand / Deal Next Hand** commits the selected stake and deals alternately to the player
   and dealer. The stake is deducted before dealing, and cannot change during a
   hand. The dealer's second card stays face down during the player's turn.
-- The **same 52-card deck persists across rounds**. Dealt cards are not returned
+- The **same 52-card deck persists across hands**. Dealt cards are not returned
   between hands. The table shows the deck number and cards remaining, including
   the fact that the hole card has been drawn, without revealing its identity.
   At fewer than **20 cards remaining**, a fresh shuffled deck is prepared before
@@ -127,7 +136,7 @@ restart, or instance replacement resets active games and bankrolls.
 - **Stand** reveals the dealer's hand. The dealer hits below 17 and stands on
   **all 17s, including soft 17**. Dealer busts lose; otherwise the higher total
   wins. Equal totals are a **push**, meaning neither side wins.
-- **New Round** is available before the first deal and after a result. It is
+- The deal button is available before the first hand and after a result. It is
   disabled during a hand. Hit and Stand are disabled outside the player's turn.
   The rules engine also rejects out-of-turn commands and repeated result actions.
 - Start with **1,000 virtual chips**. A normal win pays **1:1** profit; blackjack
@@ -136,13 +145,18 @@ restart, or instance replacement resets active games and bankrolls.
   for 7.5 profit. Accounting uses integer half-chip units, so no payout is rounded.
 - Results show the hand's net profit/loss and the amount returned, including the
   stake. The bankroll displays spendable chips; the gold table chip shows the
-  wager. Session profit includes the stake still in play until a hand settles.
-- A bankroll below the 5-chip table minimum ends the session. **New Session**
-  then explicitly resets the bankroll, deck and counters. There is no automatic
-  refill, and a healthy session cannot be reset using that command.
-- Wins, losses, and pushes accumulate in the current tab. These chips have no
+  wager. Game profit includes the stake still in play until a hand settles.
+- A bankroll below the 5-chip table minimum ends the game. **New Game** then
+  resets the bankroll, deck and counters. The same reset is also available after
+  any completed hand; it is never allowed while a wager is still in play.
+- Wins, losses, and pushes accumulate in the current game. These chips have no
   monetary value. Splitting, doubling, surrender, and insurance are not included.
   There is no five-card automatic-win rule.
+- The desktop, tablet, and phone layouts keep every gameplay control in one
+  viewport without vertical or horizontal page scrolling. Cards overlap when a
+  hand grows. Explanatory rules remain visible on larger screens and are hidden
+  on compact screens, where the same information is still reflected in labels,
+  status messages, and tooltips.
 - Buttons support keyboard Tab navigation and Enter/Space activation. Cards
   have readable suit/rank labels, results use a polite live region, and focus
   moves to the next usable control without jumping the page.
@@ -161,7 +175,7 @@ Run the full production build and integration suite:
 ./mvnw clean verify
 ```
 
-The suite contains **74 unit/component cases and 2 integration tests**:
+The suite contains **78 unit/component cases and 2 integration tests**:
 
 - `HandTest`: ace revaluation, multiple aces, soft/hard totals, natural vs.
   multi-card 21, busts, immutable hands, and invalid card data.
@@ -172,20 +186,20 @@ The suite contains **74 unit/component cases and 2 integration tests**:
   new rounds, statistics, independent games, and Java session serialization.
 - `BlackjackBettingTest`: exact stake deductions and every payout, 3:2 half-chip
   precision, invalid and unaffordable bets, repeated settlement protection,
-  bankruptcy, fractional remainders, and explicit session restart.
+  bankruptcy, fractional remainders, dynamic all-in limits, and explicit game reset.
 - `BlackjackShoeTest`: cards persist across rounds, all draws reduce the deck,
   the exact cut boundary, between-round-only shuffles, and failed replacements
   leaving bankroll and previous results unchanged.
 - `BlackjackViewTest`: actual Vaadin buttons and listeners connected to fixed
   decks; checks card concealment, control states, score/results, reset behavior,
-  accessible card labels, independent views, chip controls, stake validation,
-  bankroll displays, and the bankruptcy/restart flow. No paid testing license needed.
+  accessible localized card labels, per-tab state across language routes, chip
+  controls, stake validation, bankroll displays, and game resets. No paid testing license needed.
 - `BlackjackGameIT`: **2,000 reproducible rounds** across 100 independent tables,
   checked against an independent scoring and bankroll calculation. Checks card
   uniqueness across whole decks, including multiple rounds and reshuffles.
 - `ProductionPackageIT`: inspects the built JAR, starts it on a temporary port
-  from an empty directory, verifies production mode, and requests the page and
-  responsive card stylesheet. It shuts down its own process afterwards.
+  from an empty directory, verifies production mode, requests both language routes,
+  and validates the responsive single-screen stylesheet. It shuts down its own process afterwards.
 
 Reports are written to `target/surefire-reports` and `target/failsafe-reports`.
 The real production UI was also checked in the browser; see [TESTING.md](TESTING.md).
@@ -202,26 +216,31 @@ src/main/java/org/example/
     Deck.java                  Finite shuffled deck; ordered decks for testing
     BlackjackGame.java         Rules, bankroll, payouts, deck lifecycle, and statistics
   ui/
-    BlackjackView.java          Vaadin route, rendering, controls, result copy
+    BlackjackView.java          Shared Vaadin composition, rendering, and controls
+    RussianBlackjackView.java   Russian `/ru` route using the shared game UI
+    GameMessages.java           Resource-bundle localization boundary
     PlayingCard.java            Reusable accessible HTML card component
+src/main/resources/i18n/       English and Russian UI copy
 src/main/resources/META-INF/resources/
   styles/blackjack.css          Scoped responsive styling
   favicon.svg                  Local spade icon
 src/test/java/                 Rules, component, and integration tests
 ```
 
-Each `BlackjackView` creates its own `BlackjackGame`. There is **no shared mutable
-singleton or static game state**. Different users and different tabs have
-independent hands, decks, and results, even when tabs share an HTTP session.
-Vaadin's session lock serializes that session's requests. The core game is plain
+Each Vaadin `UI`—normally one browser tab—owns one `BlackjackGame`. The English
+and Russian routes reuse that tab-local game, so changing language preserves the
+hand and bankroll. There is **no application-wide mutable singleton or static game
+state**. Different users and different tabs have independent hands, decks, and
+results, even when tabs share an HTTP session. Vaadin's session lock serializes
+that session's requests. The core game is plain
 Java, with immutable records for cards, hands, statistics, and visible snapshots.
 The hole card is excluded from snapshots until the round is over; it is never
 sent as hidden HTML or a hidden numeric total.
 
 State is held in memory for the view's lifetime. Vaadin's `@PreserveOnRefresh`
 keeps the same hand, bankroll, deck and bet across a reload of the same tab.
-Opening a separate tab starts an independent session. Closing the tab, HTTP
-session expiry, or a server restart can end that session; no database or
+Opening a separate tab starts an independent game. Closing the tab, HTTP
+session expiry, or a server restart can end that game; no database or
 long-term bankroll storage is configured. Request handling uses Spring Boot's virtual-thread support; game actions
 are short and synchronous, so they need neither background executors nor push.
 

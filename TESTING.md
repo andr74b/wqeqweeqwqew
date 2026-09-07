@@ -1,20 +1,20 @@
 # Blackjack verification
 
-Verified on **6 September 2026**, on this Mac with Microsoft OpenJDK **25.0.4.1**.
+Verified on **7 September 2026**, on this Mac with Microsoft OpenJDK **25.0.4.1**.
 Vaadin **25.2.6**, Spring Boot **4.1.1**, Maven wrapper **3.9.16**.
 
 ## Automated results
 
 Final command: `./mvnw --batch-mode --no-transfer-progress clean verify`
 
-**BUILD SUCCESS — 76 tests, 0 failures, 0 errors, 0 skipped.**
+**BUILD SUCCESS — 80 tests, 0 failures, 0 errors, 0 skipped.**
 
 | Suite | Cases | Result |
 | --- | ---: | --- |
 | HandTest | 17 | Pass |
 | DeckTest | 3 | Pass |
 | BlackjackGameTest | 20 | Pass |
-| BlackjackViewTest | 12 | Pass |
+| BlackjackViewTest | 16 | Pass |
 | BlackjackBettingTest | 18 | Pass |
 | BlackjackShoeTest | 4 | Pass |
 | BlackjackGameIT | 1, exercising 2,000 rounds | Pass |
@@ -32,43 +32,31 @@ Detailed XML/text results are in `target/surefire-reports` and
 
 The production JAR was started with `java -jar target/blackjack.jar
 --server.port=8082 --server.address=127.0.0.1`, and its real Vaadin client was
-exercised in the Codex in-app browser at localhost:8082. This avoided interrupting
-the existing servers on ports 8080 and 8081.
+exercised in Google Chrome at localhost:8082.
 
-- Initial state: 1,000 chips, 52 cards, empty card spaces, zero counters, New
-  Round enabled for the initial 25-chip bet, Hit and Stand disabled.
-- Chip rack: Clear disables dealing and displays validation. Adding the 5 and
-  25 chips selects a 30-chip stake while leaving the bankroll at 1,000.
-- Stake and settlement: a 30-chip deal reduced the bankroll to 970. An observed
-  comparison win returned 60 chips, showing a 1,030 balance and +30 session profit.
-- Dealing: two player cards, one visible dealer card and a patterned card back;
-  the dealer score shows only the upcard. New Round becomes disabled.
-- Hit: one card added; observed a player bust, immediate loss, revealed dealer
-  cards, and correctly disabled move controls.
-- Stand: observed comparison wins and dealer drawing to a bust; result text,
-  dealer cards, and win counters updated together.
-- Natural blackjack: observed automatic resolution on the deal, including the
-  blackjack score label and a win with no extra dealer draw.
-- Persistent deck: the next round dealt from the same deck, showing 44 / 52
-  cards left. Later the counter reached 19 / 52 and displayed the cut notice.
-  The next deal displayed Deck 2, 48 / 52, and an explicit fresh-shuffle notice.
-- Refresh preservation: compared the hand markup, bankroll, deck counter and
-  round before and after a page reload during play; all remained identical.
-- Bankruptcy: two losing 500-chip hands brought a separate tab's bankroll to
-  zero. New Round was replaced by New Session. Clicking it explicitly restored
-  1,000 chips, Deck 1 with 52 cards, the initial 25-chip selection, and zero rounds.
-- Isolation: the second tab's bets, losses, and bankruptcy did not change the
-  first tab's bankroll, deck counter or round. New tabs begin independently.
-- Keyboard: Enter on Stand activated the command; focus moved to the next
-  enabled control. Accessible card names and status announcements are present.
-- The view uses Vaadin's PreventScroll focus option to avoid programmatic jumps
-  when moving focus to the next enabled action.
-- Responsive widths checked: **320**, **390**, **768**, **1280**, and **1440**
-  pixels. Document width matched the viewport; no horizontal overflow was found.
-  Chip buttons measured 46 × 46 pixels on the phone layout. Action buttons use
-  46-pixel height on phones and 44 on desktop/tablet.
-  The page scrolls vertically on short screens.
-- No browser warning/error console entries were recorded during the checks.
+- Initial state: `NEW GAME`, 1,000 chips, 52 cards, zero results, an initial
+  25-chip selection, and **Deal First Hand** enabled. Hit and Stand are disabled.
+- Betting: the field advertises `5–1,000 chips · all-in allowed`; its actual max
+  is 1,000. After committing 25 chips, the max becomes the 975-chip spendable
+  bankroll and the field remains locked until the hand ends.
+- Game lifecycle: a deal changes the heading to `HAND 01`; the next deal keeps
+  the bankroll, deck and results, while **New Game** resets them after a completed
+  hand. Reset remains unavailable while a wager is active.
+- English/Russian routing: a live English hand was switched from `/` to `/ru`.
+  Chrome showed the Russian page title, `lang=ru`, `РУКА 01`, localized controls,
+  status, card names and number formatting while preserving that hand and bankroll.
+- Gameplay smoke test: dealing concealed the hole card and locked the wager;
+  Stand revealed the dealer, settled the hand once, updated the counter and showed
+  both **Ещё рука** and **Новая игра**.
+- Responsive viewports checked: **320×568**, **390×844**, **768×1024**,
+  **1280×720**, and **1440×757**. At every size the document dimensions exactly
+  matched the viewport and measured bounds found no gameplay control outside it.
+  The completed Russian state—with all four action buttons—also fit at 320×568.
+- The 320×568 render was visually inspected: hands remain side by side, cards
+  overlap safely, the wager field and chip rack remain operable, and the result
+  plus all actions stay on screen without horizontal or vertical page scrolling.
+- No Chrome warning, error, or uncaught-exception entries were recorded during
+  the final route, interaction, and resize checks.
 
 The UI checks above are an interactive smoke test, not a committed automated
 browser suite. Rule edge cases, including both-natural pushes, dealer natural,

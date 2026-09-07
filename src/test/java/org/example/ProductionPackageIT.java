@@ -74,12 +74,16 @@ class ProductionPackageIT {
             var response = client.send(request, HttpResponse.BodyHandlers.ofString());
             assertEquals(200, response.statusCode());
             assertTrue(response.body().contains("VAADIN/"), "The application must serve its Vaadin frontend");
+            var russian = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/ru"))
+                    .timeout(Duration.ofSeconds(10)).GET().build();
+            assertEquals(200, client.send(russian, HttpResponse.BodyHandlers.discarding()).statusCode());
             var stylesheet = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/styles/blackjack.css"))
                     .timeout(Duration.ofSeconds(10)).GET().build();
             var css = client.send(stylesheet, HttpResponse.BodyHandlers.ofString());
             assertEquals(200, css.statusCode());
             assertTrue(css.body().contains(".blackjack-app .playing-card"), "Packaged card styles must be served");
             assertTrue(css.body().contains("max-width: 540px"), "Packaged mobile styles must be served");
+            assertTrue(css.body().contains("height: 100dvh"), "Packaged single-screen layout must be served");
             var output = Files.readString(log);
             assertTrue(output.contains("Vaadin is running in production mode."), output);
             assertFalse(output.contains("Vaadin is running in DEVELOPMENT mode"), output);

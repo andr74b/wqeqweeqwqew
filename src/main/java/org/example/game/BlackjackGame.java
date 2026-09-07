@@ -6,13 +6,12 @@ import java.util.Objects;
 
 /**
  * Single-player, single-deck blackjack. The dealer stands on all 17s.
- * Owned by one Vaadin view, whose session lock serializes commands.
+ * Owned by one Vaadin UI (browser tab), whose session lock serializes commands.
  * Virtual chips use exact half-chip units. Cards persist across rounds until the cut.
  */
 public final class BlackjackGame implements Serializable {
     public static final int STARTING_CHIPS = 1_000;
     public static final int MIN_BET = 5;
-    public static final int MAX_BET = 500;
     public static final int BET_STEP = 5;
     // Enough reserve for both hands of this single-deck, single-player ruleset.
     // Shuffle only BETWEEN rounds, never replace cards partway through a hand.
@@ -45,7 +44,7 @@ public final class BlackjackGame implements Serializable {
         if (phase == Phase.PLAYER_TURN) {
             return BetValidation.ROUND_IN_PROGRESS;
         }
-        if (bet < MIN_BET || bet > MAX_BET || bet % BET_STEP != 0) {
+        if (bet < MIN_BET || bet % BET_STEP != 0) {
             return BetValidation.INVALID_AMOUNT;
         }
         return bankroll.halfUnits() < bet * 2L ? BetValidation.INSUFFICIENT_CHIPS : BetValidation.VALID;
@@ -96,9 +95,9 @@ public final class BlackjackGame implements Serializable {
         return fresh;
     }
 
-    /** An explicit new session is allowed only after the bankroll falls below the table minimum. */
-    public boolean restartSession() {
-        if (!snapshot().outOfChips()) {
+    /** Reset the whole game between hands, never while a wager is still in play. */
+    public boolean restartGame() {
+        if (phase == Phase.PLAYER_TURN || round == 0) {
             return false;
         }
         var fresh = freshDeck();
@@ -197,7 +196,10 @@ public final class BlackjackGame implements Serializable {
         public boolean canPlay() { return phase == Phase.PLAYER_TURN; }
         public boolean outOfChips() { return !canPlay() && bankroll.halfUnits() < MIN_BET * 2L; }
         public int maximumBet() {
-            return (int) Math.min(MAX_BET, bankroll.halfUnits() / (2 * BET_STEP) * BET_STEP);
+            long bankrollWholeChips = bankroll.halfUnits() / 2;
+            long steppedBankroll = bankrollWholeChips / BET_STEP * BET_STEP;
+            int largestRepresentableBet = Integer.MAX_VALUE - Integer.MAX_VALUE % BET_STEP;
+            return (int) Math.min(steppedBankroll, largestRepresentableBet);
         }
         public boolean shuffleBeforeNextRound() { return !canPlay() && cardsRemaining < SHUFFLE_BELOW; }
         public long netHalfChips() { return phase == Phase.ROUND_OVER ? payout.halfUnits() - wager * 2L : 0; }

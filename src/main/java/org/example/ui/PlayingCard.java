@@ -5,15 +5,21 @@ import com.vaadin.flow.component.html.Span;
 import org.example.game.Card;
 import org.example.game.Rank;
 
+import java.util.Locale;
+
 /** Conventional, accessible card faces built entirely from HTML and CSS. */
 final class PlayingCard extends Div {
     PlayingCard(Card card) {
+        this(card, new GameMessages(Locale.ENGLISH));
+    }
+
+    PlayingCard(Card card, GameMessages messages) {
         addClassName("playing-card");
         if (card.suit().isRed()) {
             addClassName("red-suit");
         }
         getElement().setAttribute("role", "img");
-        getElement().setAttribute("aria-label", card.label());
+        getElement().setAttribute("aria-label", messages.cardLabel(card));
 
         var face = new Div();
         face.addClassName("card-face");
@@ -22,17 +28,19 @@ final class PlayingCard extends Div {
         add(face);
     }
 
-    private PlayingCard(boolean placeholder) {
+    private PlayingCard(boolean placeholder, GameMessages messages) {
         addClassNames("playing-card", placeholder ? "card-placeholder" : "card-back");
         getElement().setAttribute("role", "img");
-        getElement().setAttribute("aria-label", placeholder ? "Empty card space" : "Face-down card");
+        getElement().setAttribute("aria-label", messages.text(placeholder ? "card.empty" : "card.faceDown"));
         var mark = new Span("♠");
         mark.getElement().setAttribute("aria-hidden", "true");
         add(mark);
     }
 
-    static PlayingCard faceDown() { return new PlayingCard(false); }
-    static PlayingCard placeholder() { return new PlayingCard(true); }
+    static PlayingCard faceDown() { return faceDown(new GameMessages(Locale.ENGLISH)); }
+    static PlayingCard placeholder() { return placeholder(new GameMessages(Locale.ENGLISH)); }
+    static PlayingCard faceDown(GameMessages messages) { return new PlayingCard(false, messages); }
+    static PlayingCard placeholder(GameMessages messages) { return new PlayingCard(true, messages); }
 
     private static Div corner(Card card, String position) {
         var corner = new Div(new Span(card.rank().symbol()), new Span(card.suit().symbol()));

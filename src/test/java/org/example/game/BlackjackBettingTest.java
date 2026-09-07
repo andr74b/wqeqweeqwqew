@@ -86,7 +86,7 @@ class BlackjackBettingTest {
         var playing = game.snapshot();
         assertEquals(ROUND_IN_PROGRESS, game.validateBet(100));
         assertFalse(game.newRound(100));
-        assertFalse(game.restartSession());
+        assertFalse(game.restartGame());
         assertEquals(playing, game.snapshot());
         game.stand();
         var finished = game.snapshot();
@@ -96,19 +96,22 @@ class BlackjackBettingTest {
     }
 
     @Test
-    void bankrollMustBeAvailableAndCannotRefillDuringAHealthySession() {
+    void maximumBetTracksTheBankrollAndGameCanResetBetweenHands() {
         var game = game(TEN, TEN, SIX, EIGHT, TEN, TEN, SIX, EIGHT);
-        assertFalse(game.restartSession());
+        assertEquals(1_000, game.snapshot().maximumBet());
+        assertFalse(game.restartGame());
         game.newRound(500);
         game.stand();
         game.newRound(250);
         game.stand();
         assertEquals(Chips.whole(250), game.snapshot().bankroll());
+        assertEquals(250, game.snapshot().maximumBet());
         assertEquals(INSUFFICIENT_CHIPS, game.validateBet(255));
-        var before = game.snapshot();
         assertFalse(game.newRound(255));
-        assertFalse(game.restartSession());
-        assertEquals(before, game.snapshot());
+        assertTrue(game.restartGame());
+        assertEquals(Chips.whole(1_000), game.snapshot().bankroll());
+        assertEquals(1_000, game.snapshot().maximumBet());
+        assertEquals(0, game.snapshot().round());
     }
 
     @Test
@@ -118,12 +121,12 @@ class BlackjackBettingTest {
         game.stand();
         game.newRound(500);
         assertFalse(game.snapshot().outOfChips(), "An all-in hand is still allowed to finish");
-        assertFalse(game.restartSession());
+        assertFalse(game.restartGame());
         game.stand();
         assertTrue(game.snapshot().outOfChips());
         assertEquals(Chips.ZERO, game.snapshot().bankroll());
         assertFalse(game.newRound(5));
-        assertTrue(game.restartSession());
+        assertTrue(game.restartGame());
         assertEquals(Chips.whole(1_000), game.snapshot().bankroll());
         assertEquals(0, game.snapshot().round());
         assertEquals(0, game.snapshot().statistics().roundsPlayed());
@@ -146,7 +149,7 @@ class BlackjackBettingTest {
         game.stand();
         assertEquals(new Chips(5), game.snapshot().bankroll()); // 2.5
         assertTrue(game.snapshot().outOfChips());
-        assertTrue(game.restartSession());
+        assertTrue(game.restartGame());
     }
 
     @Test

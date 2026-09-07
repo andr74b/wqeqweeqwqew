@@ -12,6 +12,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
 import static org.example.TestDecks.game;
@@ -38,7 +40,7 @@ class BlackjackViewTest {
         assertFalse(button("hit").isEnabled());
         assertFalse(button("stand").isEnabled());
         assertTrue(button("new-round").isEnabled());
-        assertEquals("Your seat is ready.", component("status-title", H2.class).getText());
+        assertEquals("New game ready.", component("status-title", H2.class).getText());
         assertEquals("0", component("wins", Span.class).getText());
         assertEquals("polite", component("round-status", Div.class).getElement().getAttribute("aria-live"));
     }
@@ -80,7 +82,7 @@ class BlackjackViewTest {
         assertEquals("27 · Bust", component("player-score", Span.class).getText());
         assertEquals("1", component("losses", Span.class).getText());
         button("new-round").click();
-        assertEquals("ROUND 02", component("round-number", Span.class).getText());
+        assertEquals("HAND 02", component("round-number", Span.class).getText());
         assertEquals("14 · Soft", component("player-score", Span.class).getText());
         assertEquals("1", component("losses", Span.class).getText());
         assertEquals(2, component("player-cards", Div.class).getChildren().count());
@@ -106,7 +108,7 @@ class BlackjackViewTest {
         assertEquals("1", component("wins", Span.class).getText());
         view = otherView;
         assertEquals("0", component("wins", Span.class).getText());
-        assertEquals("Your seat is ready.", component("status-title", H2.class).getText());
+        assertEquals("New game ready.", component("status-title", H2.class).getText());
     }
 
     @Test
@@ -141,9 +143,9 @@ class BlackjackViewTest {
         assertTrue(component("bet-amount", IntegerField.class).isInvalid());
         component("bet-amount", IntegerField.class).setValue(6);
         assertFalse(button("new-round").isEnabled());
-        component("bet-amount", IntegerField.class).setValue(505);
+        component("bet-amount", IntegerField.class).setValue(1_005);
         assertFalse(button("new-round").isEnabled());
-        component("bet-amount", IntegerField.class).setValue(500);
+        component("bet-amount", IntegerField.class).setValue(1_000);
         assertTrue(button("new-round").isEnabled());
         assertFalse(button("chip-5").isEnabled());
         assertEquals("1,000", component("bankroll", Span.class).getText());
@@ -156,7 +158,7 @@ class BlackjackViewTest {
         component("bet-amount", IntegerField.class).setValue(5);
         button("new-round").click();
         assertEquals("1,007.5", component("bankroll", Span.class).getText());
-        assertEquals("+7.5 this session", component("session-profit", Span.class).getText());
+        assertEquals("+7.5 this game", component("session-profit", Span.class).getText());
         assertTrue(component("payout-text", Span.class).getText().contains("12.5 returned"));
     }
 
@@ -171,7 +173,7 @@ class BlackjackViewTest {
     }
 
     @Test
-    void bankruptcyReplacesDealWithExplicitNewSession() {
+    void bankruptcyReplacesDealWithExplicitNewGame() {
         view = new BlackjackView(game(TEN, TEN, SIX, EIGHT, TEN, TEN, SIX, EIGHT));
         UI.getCurrent().add(view);
         component("bet-amount", IntegerField.class).setValue(500);
@@ -180,15 +182,57 @@ class BlackjackViewTest {
         button("new-round").click();
         button("stand").click();
         assertEquals("0", component("bankroll", Span.class).getText());
-        assertTrue(button("new-session").isVisible());
+        assertTrue(button("new-game").isVisible());
         assertFalse(button("new-round").isVisible());
         assertFalse(component("bet-amount", IntegerField.class).isEnabled());
-        button("new-session").click();
+        button("new-game").click();
         assertEquals("1,000", component("bankroll", Span.class).getText());
         assertEquals("DECK 1 · 52 / 52 LEFT", component("shoe-status", Span.class).getText());
         assertEquals(25, component("bet-amount", IntegerField.class).getValue());
         assertTrue(button("new-round").isEnabled());
-        assertFalse(button("new-session").isVisible());
+        assertFalse(button("new-game").isVisible());
+    }
+
+    @Test
+    void newGameCanResetAHealthyCompletedGame() {
+        button("new-round").click();
+        button("stand").click();
+        assertTrue(button("new-game").isVisible());
+        button("new-game").click();
+        assertEquals("NEW GAME", component("round-number", Span.class).getText());
+        assertEquals("1,000", component("bankroll", Span.class).getText());
+        assertEquals("0", component("wins", Span.class).getText());
+    }
+
+    @Test
+    void russianRouteLocalizesTheWholeGame() {
+        view = new RussianBlackjackView(game(TEN, SIX, SEVEN, TEN, KING));
+        UI.getCurrent().add(view);
+        assertEquals("Новая игра готова.", component("status-title", H2.class).getText());
+        assertEquals("Первая рука", button("new-round").getText());
+        button("new-round").click();
+        assertEquals("РУКА 01", component("round-number", Span.class).getText());
+        assertEquals("видно 6", component("dealer-score", Span.class).getText());
+        assertTrue(component("dealer-cards", Div.class).getElement().getOuterHTML().contains("шестёрка"));
+    }
+
+    @Test
+    void languageRoutesShareTheGameWithinOneBrowserTab() {
+        view = new BlackjackView();
+        UI.getCurrent().add(view);
+        button("new-round").click();
+
+        view = new RussianBlackjackView();
+        UI.getCurrent().add(view);
+        assertEquals("РУКА 01", component("round-number", Span.class).getText());
+        assertNotEquals("Новая игра готова.", component("status-title", H2.class).getText());
+    }
+
+    @Test
+    void russianBundleCannotDriftFromTheEnglishMessageContract() {
+        var english = ResourceBundle.getBundle("i18n.messages", Locale.ENGLISH);
+        var russian = ResourceBundle.getBundle("i18n.messages", Locale.forLanguageTag("ru"));
+        assertEquals(english.keySet(), russian.keySet());
     }
 
     private Button button(String id) { return component(id, Button.class); }
