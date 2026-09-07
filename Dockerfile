@@ -4,6 +4,12 @@ FROM eclipse-temurin:25-jdk-noble AS build
 
 WORKDIR /workspace
 
+# The Maven wrapper checksum is for the configured ZIP distribution. Without
+# unzip, the wrapper falls back to a tar.gz download and that checksum cannot match.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip \
+    && rm -rf /var/lib/apt/lists/*
+
 # Resolve Java dependencies in a cacheable layer before copying application code.
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
