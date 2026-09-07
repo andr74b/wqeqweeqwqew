@@ -4,8 +4,31 @@ A responsive, single-player Blackjack game built with **Java 25**, **Vaadin Flow
 25.2.6**, and **Spring Boot 4.1.1**. The UI uses Java Vaadin components and ordinary
 CSS playing cards. All rules and hidden cards stay on the server. Build a
 1,000-chip virtual bankroll while playing through a persistent 52-card deck.
-English is served at `/` and Russian at `/ru`; the in-game switch changes language
-without resetting the current game.
+English is served at `/`, Russian at `/ru`, and Spanish at `/es`; the in-game
+language selector changes language without resetting the current game.
+
+## Desktop application for Windows and macOS
+
+The same Java and Vaadin application can be distributed as a normal desktop app.
+The installer contains its own Java 25 runtime and opens the game in a dedicated
+Electron window: users do not see a localhost address, do not need an external
+browser and do not install Java separately. The window starts and stops the
+embedded Spring Boot server automatically.
+
+After changing any application code, build a fresh installer with:
+
+```sh
+cd desktop
+npm ci
+npm run dist
+```
+
+The command tests and packages the backend before producing the current
+platform's installer under `desktop/dist`. Builds must run on their target
+platform because the bundled JVM is native. Windows produces `.exe` and `.msi`;
+macOS produces `.app` inside a `.dmg` plus a `.zip`. See
+[desktop/README.md](desktop/README.md) for prerequisites, per-platform commands,
+CI builds, release versioning, code signing, notarization and troubleshooting.
 
 ## Run from the terminal (macOS)
 
@@ -40,7 +63,8 @@ without resetting the current game.
    Maven, npm, or Node installation is required.
 
 4. Open **http://localhost:8080** in a browser. Click **Deal** to play.
-   Russian is available at **http://localhost:8080/ru** or from the EN/RU switch.
+   Russian and Spanish are available at **http://localhost:8080/ru** and
+   **http://localhost:8080/es**, or from the language selector.
 
 5. To stop the server, press **Ctrl+C** in the terminal that is running it.
 
@@ -153,7 +177,7 @@ restart, or instance replacement resets active games and bankrolls.
   monetary value. Splitting, doubling, surrender, and insurance are not included.
   There is no five-card automatic-win rule.
 - The interface focuses on the cards, balance and current action. The **Rules**
-  button opens a short guide in either language. Betting controls appear between
+  button opens a short guide in each supported language. Betting controls appear between
   hands; Hit and Stand appear while playing. Result messages stay concise.
 - Phones stack the hands vertically. Larger screens place them side by side;
   hands with seven or more cards stack at widths up to 900px so card ranks remain
@@ -177,7 +201,7 @@ Run the full production build and integration suite:
 ./mvnw clean verify
 ```
 
-The suite contains **78 unit/component cases and 2 integration tests**:
+The suite contains **80 unit/component cases and 2 integration tests**:
 
 - `HandTest`: ace revaluation, multiple aces, soft/hard totals, natural vs.
   multi-card 21, busts, immutable hands, and invalid card data.
@@ -196,12 +220,15 @@ The suite contains **78 unit/component cases and 2 integration tests**:
   decks; checks card concealment, control states, score/results, reset behavior,
   accessible localized card labels, per-tab state across language routes, chip
   controls, stake validation, bankroll displays, and game resets. No paid testing license needed.
+- `SpanishBlackjackViewTest`: Spanish copy, route behavior, localized cards and
+  the English/Russian/Spanish language selector.
 - `BlackjackGameIT`: **2,000 reproducible rounds** across 100 independent tables,
   checked against an independent scoring and bankroll calculation. Checks card
   uniqueness across whole decks, including multiple rounds and reshuffles.
-- `ProductionPackageIT`: inspects the built JAR, starts it on a temporary port
-  from an empty directory, verifies production mode, requests both language routes,
-  and validates the responsive stylesheet. It shuts down its own process afterwards.
+- `ProductionPackageIT`: inspects the built JAR, starts it with the desktop
+  launcher handshake on a temporary port, verifies production mode, requests all
+  three language routes, and validates the responsive stylesheet. It shuts down
+  its own process afterwards.
 
 Reports are written to `target/surefire-reports` and `target/failsafe-reports`.
 The real production UI was also checked in the browser; see [TESTING.md](TESTING.md).
@@ -220,9 +247,10 @@ src/main/java/org/example/
   ui/
     BlackjackView.java          Shared Vaadin composition, rendering, and controls
     RussianBlackjackView.java   Russian `/ru` route using the shared game UI
+    SpanishBlackjackView.java   Spanish `/es` route using the shared game UI
     GameMessages.java           Resource-bundle localization boundary
     PlayingCard.java            Reusable accessible HTML card component
-src/main/resources/i18n/       English and Russian UI copy
+src/main/resources/i18n/       English, Russian, and Spanish UI copy
 src/main/resources/META-INF/resources/
   styles/blackjack.css          Scoped responsive styling
   favicon.svg                  Local spade icon

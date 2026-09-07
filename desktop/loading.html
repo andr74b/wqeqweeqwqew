@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blackjack</title>
+  <style>
+    :root { color-scheme: light; font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f5f3ed; color: #253d33; }
+    main { text-align: center; }
+    .mark { font: 48px Georgia, serif; }
+    h1 { margin: 12px 0 8px; font: 500 44px Georgia, serif; }
+    p { margin: 0; color: #68736b; font-size: 13px; }
+    .pulse { width: 5px; height: 5px; margin: 22px auto 0; border-radius: 50%; background: #aa8942; animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: .25; transform: scale(.75); } }
+    @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark" aria-hidden="true">♠</div>
+    <h1>Blackjack</h1>
+    <p>Preparing the table…</p>
+    <div class="pulse" aria-hidden="true"></div>
+  </main>
+</body>
+</html>

@@ -28,6 +28,8 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
+!desktop/build/
+!desktop/build/**
 
 ### VS Code ###
 .vscode/
@@ -37,6 +39,9 @@ build/
 
 ### Vaadin ###
 node_modules/
+desktop/staging/
+desktop/dist/
+desktop/resources/
 src/main/frontend/generated/
 src/main/bundles/
 vite.generated.ts

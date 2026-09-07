@@ -23,8 +23,6 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Tests the deployable artifact, including its actual runtime mode. */
 class ProductionPackageIT {
 
-    private static final Pattern STARTED_PORT = Pattern.compile("Tomcat started on port (\\d+)");
-
     @TempDir
     Path temporaryDirectory;
 
@@ -57,8 +55,12 @@ class ProductionPackageIT {
 
         var log = temporaryDirectory.resolve("application.log");
         var java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
+        var portFile = temporaryDirectory.resolve("desktop-port");
         var builder = new ProcessBuilder(java, "-jar", artifact.toString(),
-                "--server.address=127.0.0.1", "--server.port=0")
+                "--server.address=127.0.0.1", "--server.port=0",
+                "--spring.profiles.active=desktop",
+                "--blackjack.desktop.port-file=" + portFile,
+                "--blackjack.desktop.parent-pid=" + ProcessHandle.current().pid())
                 .directory(temporaryDirectory.toFile())
                 .redirectErrorStream(true)
                 .redirectOutput(log.toFile());
@@ -68,7 +70,7 @@ class ProductionPackageIT {
         builder.environment().remove("VAADIN_PRODUCTION_MODE");
         var process = builder.start();
         try (var client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
-            var port = awaitStartedPort(process, log);
+            var port = awaitPublishedPort(process, log, portFile);
             var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/"))
                     .timeout(Duration.ofSeconds(10)).GET().build();
             var response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -77,6 +79,9 @@ class ProductionPackageIT {
             var russian = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/ru"))
                     .timeout(Duration.ofSeconds(10)).GET().build();
             assertEquals(200, client.send(russian, HttpResponse.BodyHandlers.discarding()).statusCode());
+            var spanish = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/es"))
+                    .timeout(Duration.ofSeconds(10)).GET().build();
+            assertEquals(200, client.send(spanish, HttpResponse.BodyHandlers.discarding()).statusCode());
             var stylesheet = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/styles/blackjack.css"))
                     .timeout(Duration.ofSeconds(10)).GET().build();
             var css = client.send(stylesheet, HttpResponse.BodyHandlers.ofString());
@@ -96,15 +101,16 @@ class ProductionPackageIT {
         }
     }
 
-    private int awaitStartedPort(Process process, Path log) throws IOException, InterruptedException {
+    private int awaitPublishedPort(Process process, Path log, Path portFile)
+            throws IOException, InterruptedException {
         long deadline = System.nanoTime() + Duration.ofSeconds(30).toNanos();
         while (process.isAlive() && System.nanoTime() < deadline) {
-            var match = STARTED_PORT.matcher(Files.readString(log));
-            if (match.find()) {
-                return Integer.parseInt(match.group(1));
+            if (Files.isRegularFile(portFile)) {
+                return Integer.parseInt(Files.readString(portFile));
             }
             Thread.sleep(Duration.ofMillis(100));
         }
-        throw new AssertionError("Packaged application did not start:\n" + Files.readString(log));
+        throw new AssertionError("Packaged desktop server did not publish its port:\n"
+                + Files.readString(log));
     }
 }

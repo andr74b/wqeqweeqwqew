@@ -1,0 +1,92 @@
+{
+  "name": "blackjack",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Desktop shell for the existing Java and Vaadin blackjack game",
+  "author": "The Little Card Club",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "prepare-runtime": "node scripts/prepare-runtime.mjs",
+    "dist": "node scripts/build-desktop.mjs",
+    "dist:mac": "node scripts/build-desktop.mjs --target mac",
+    "dist:win": "node scripts/build-desktop.mjs --target win"
+  },
+  "devDependencies": {
+    "electron": "44.2.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "club.littlecard.blackjack",
+    "productName": "Blackjack",
+    "asar": true,
+    "npmRebuild": false,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.cjs",
+      "loading.html",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "staging/blackjack.jar",
+        "to": "backend/blackjack.jar"
+      },
+      {
+        "from": "staging/runtime",
+        "to": "runtime"
+      }
+    ],
+    "artifactName": "Blackjack-${version}-${os}-${arch}.${ext}",
+    "electronLanguages": [
+      "en",
+      "es",
+      "ru"
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.card-games",
+      "icon": "build/icon.icns",
+      "hardenedRuntime": true,
+      "notarize": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "binaries": [
+        "Contents/Resources/runtime/bin/java"
+      ]
+    },
+    "dmg": {
+      "title": "Blackjack ${version}",
+      "sign": false
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "msi"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "msi": {
+      "oneClick": false,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "allowScripts": {
+    "electron-winstaller@5.4.0": true
+  }
+}
